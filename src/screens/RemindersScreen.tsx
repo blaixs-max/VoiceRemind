@@ -7,6 +7,7 @@ import {
   Text,
   SectionList,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
@@ -22,7 +23,17 @@ import { dialog } from '../components/AppDialog'
 type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderList'>
 
 
-type FilterMode = 'pending' | 'done' | 'all'
+type FilterMode = 'pending' | 'done' | 'all' | 'today' | 'important'
+
+const FILTER_LABELS: Record<FilterMode, string> = {
+  pending: 'Bekliyor',
+  done: 'Tamamlandı',
+  all: 'Tümü',
+  today: 'Bugün',
+  important: 'Önemli',
+}
+
+const FILTER_ORDER: FilterMode[] = ['pending', 'done', 'all', 'today', 'important']
 
 export default function RemindersScreen() {
   const navigation = useNavigation<Nav>()
@@ -55,6 +66,8 @@ export default function RemindersScreen() {
     let list = reminders
     if (filter === 'pending') list = list.filter((r) => r.status === 'pending')
     else if (filter === 'done') list = list.filter((r) => r.status === 'done')
+    else if (filter === 'today') list = list.filter((r) => r.datetime.substring(0, 10) === todayStr)
+    else if (filter === 'important') list = list.filter((r) => r.isImportant)
     if (contactFilter) list = list.filter((r) => r.contactId === contactFilter)
 
     // Önemli olanlar kendi section'ı içinde üste — tarih sıralamasını grup içinde koruyoruz
@@ -219,21 +232,38 @@ export default function RemindersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Segment control */}
+      {/* Segment control — 5 filtre, küçük ekranlarda yatay kaydırılabilir */}
       <View style={styles.filterBar}>
-        <View style={styles.segmentRow}>
-          {(['pending', 'done', 'all'] as FilterMode[]).map((mode) => (
-            <TouchableOpacity
-              key={mode}
-              style={[styles.segment, filter === mode && styles.segmentActive]}
-              onPress={() => setFilter(mode)}
-            >
-              <Text style={[styles.segmentText, filter === mode && styles.segmentTextActive]}>
-                {mode === 'pending' ? 'Bekliyor' : mode === 'done' ? 'Tamamlandı' : 'Tümü'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.segmentRow}
+        >
+          {FILTER_ORDER.map((mode) => {
+            const active = filter === mode
+            const isImportantSegment = mode === 'important'
+            return (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.segment, active && styles.segmentActive]}
+                onPress={() => setFilter(mode)}
+                activeOpacity={0.7}
+              >
+                {isImportantSegment && (
+                  <Ionicons
+                    name={active ? 'flag' : 'flag-outline'}
+                    size={13}
+                    color={active ? colors.warning : colors.textMuted}
+                    style={styles.segmentIcon}
+                  />
+                )}
+                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
+                  {FILTER_LABELS[mode]}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
 
         {contacts.length > 0 && (
           <TouchableOpacity
@@ -278,6 +308,8 @@ export default function RemindersScreen() {
           <Text style={styles.emptyText}>
             {filter === 'pending' ? 'Bekleyen hatırlatıcı yok'
             : filter === 'done' ? 'Tamamlanmış hatırlatıcı yok'
+            : filter === 'today' ? 'Bugün için hatırlatıcı yok'
+            : filter === 'important' ? 'Önemli işaretli hatırlatıcı yok'
             : 'Henüz hatırlatıcı eklenmemiş'}
           </Text>
           <Text style={styles.emptyHint}>Kayıt ekranından sesli komut verin</Text>
@@ -327,16 +359,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.borderLight,
     borderRadius: radius.sm,
     padding: 2,
+    gap: 2,
+    alignSelf: 'flex-start',
   },
   segment: {
-    flex: 1,
-    paddingVertical: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 6,
   },
   segmentActive: {
     backgroundColor: colors.white,
     ...shadow.sm,
+  },
+  segmentIcon: {
+    marginRight: 2,
   },
   segmentText: {
     fontSize: fontSize.sm,
