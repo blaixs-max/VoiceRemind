@@ -8,9 +8,6 @@ import {
   SectionList,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  ActionSheetIOS,
-  Platform,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
@@ -20,7 +17,7 @@ import { useContactStore } from '../stores/contactStore'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
 import type { Reminder } from '../models/types'
 import type { RemindersStackParamList } from '../navigation/types'
-import ReminderActionSheet from '../components/ReminderActionSheet'
+import { dialog } from '../components/AppDialog'
 
 type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderList'>
 
@@ -38,9 +35,6 @@ export default function RemindersScreen() {
 
   const [filter, setFilter] = useState<FilterMode>('pending')
   const [contactFilter, setContactFilter] = useState<string | null>(null)
-
-  // Uygulama içi aksiyon menüsünün hedefi. null iken menü kapalı.
-  const [actionTarget, setActionTarget] = useState<Reminder | null>(null)
 
   // Ekran saat başına kadar açık kalırsa grupları doğru tutmak için
   // 60 sn'de bir 'now' tick'i — useMemo bu tick'e bağlı olduğundan gece yarısı
@@ -83,27 +77,50 @@ export default function RemindersScreen() {
 
   const totalCount = sections.reduce((s, sec) => s + sec.data.length, 0)
 
-  // Long-press → uygulama içi aksiyon menüsünü aç
-  const showActions = useCallback((r: Reminder) => {
-    setActionTarget(r)
-  }, [])
-
-  // Silme onayı hâlâ sistem Alert — "yanlışlıkla sil" korumasının en tanıdık yolu.
   const confirmDelete = useCallback((r: Reminder) => {
-    Alert.alert('Sil', `"${r.title}" silinecek.`, [
-      { text: 'İptal', style: 'cancel' },
-      { text: 'Sil', style: 'destructive', onPress: () => deleteReminder(r.id) },
-    ])
+    dialog.confirm({
+      title: 'Hatırlatıcıyı Sil',
+      message: `"${r.title}" silinecek. Bu işlem geri alınamaz.`,
+      destructive: true,
+      confirmText: 'Sil',
+      onConfirm: () => { deleteReminder(r.id) },
+    })
   }, [deleteReminder])
 
-  const handleToggleStatus = useCallback((r: Reminder) => {
-    if (r.status === 'pending') markDone(r.id)
-    else markPending(r.id)
-  }, [markDone, markPending])
+  // Long-press → merkezi options dialog (ekranın ortasında, X butonlu)
+  const showActions = useCallback((r: Reminder) => {
+    const toggleLabel = r.status === 'pending' ? 'Tamamla' : 'Geri Al'
+    const toggleIcon = r.status === 'pending'
+      ? 'checkmark-circle-outline'
+      : 'arrow-undo-outline'
 
-  const handleEditReminder = useCallback((r: Reminder) => {
-    navigation.navigate('ReminderEdit', { reminderId: r.id })
-  }, [navigation])
+    dialog.options({
+      title: r.title,
+      options: [
+        {
+          label: 'Düzenle',
+          icon: 'create-outline',
+          color: colors.primary,
+          onPress: () => navigation.navigate('ReminderEdit', { reminderId: r.id }),
+        },
+        {
+          label: toggleLabel,
+          icon: toggleIcon,
+          color: colors.success,
+          onPress: () => {
+            if (r.status === 'pending') markDone(r.id)
+            else markPending(r.id)
+          },
+        },
+        {
+          label: 'Sil',
+          icon: 'trash-outline',
+          destructive: true,
+          onPress: () => confirmDelete(r),
+        },
+      ],
+    })
+  }, [markDone, markPending, navigation, confirmDelete])
 
   const renderItem = useCallback(({ item }: { item: Reminder }) => {
     const t = new Date(item.datetime)
@@ -198,27 +215,21 @@ export default function RemindersScreen() {
             style={[styles.filterChip, contactFilter && styles.filterChipActive]}
             onPress={() => {
               if (contactFilter) return setContactFilter(null)
-              if (Platform.OS === 'ios') {
-                ActionSheetIOS.showActionSheetWithOptions(
+              dialog.options({
+                title: 'Cariye Göre Filtrele',
+                options: [
                   {
-                    options: [...contacts.map((c) => c.company), 'Tümü', 'İptal'],
-                    cancelButtonIndex: contacts.length + 1,
+                    label: 'Tümü',
+                    icon: 'apps-outline',
+                    onPress: () => setContactFilter(null),
                   },
-                  (i) => {
-                    if (i < contacts.length) setContactFilter(contacts[i].id)
-                    else if (i === contacts.length) setContactFilter(null)
-                  }
-                )
-              } else {
-                Alert.alert('Cariye Göre Filtrele', '', [
                   ...contacts.map((c) => ({
-                    text: c.company,
+                    label: c.company,
+                    icon: 'business-outline' as const,
                     onPress: () => setContactFilter(c.id),
                   })),
-                  { text: 'Tümü', onPress: () => setContactFilter(null) },
-                  { text: 'İptal', style: 'cancel' as const },
-                ])
-              }
+                ],
+              })
             }}
           >
             <Ionicons
@@ -267,15 +278,6 @@ export default function RemindersScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      {/* Uygulama içi aksiyon menüsü — long-press ile açılır */}
-      <ReminderActionSheet
-        reminder={actionTarget}
-        onClose={() => setActionTarget(null)}
-        onEdit={handleEditReminder}
-        onToggleStatus={handleToggleStatus}
-        onDelete={confirmDelete}
-      />
     </View>
   )
 }

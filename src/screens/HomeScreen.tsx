@@ -7,11 +7,11 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import MicButton from '../components/MicButton'
 import ConfirmationModal from '../components/ConfirmationModal'
+import { dialog } from '../components/AppDialog'
 import { useRecording } from '../hooks/useRecording'
 import { useParseAudio } from '../hooks/useParseAudio'
 import { useReminderStore } from '../stores/reminderStore'
@@ -53,14 +53,25 @@ export default function HomeScreen() {
     if (result && result.reminders.length > 0) {
       setModalVisible(true)
     } else if (result && result.reminders.length === 0) {
-      Alert.alert('Sonuç yok', 'Ses kaydından hatırlatıcı çıkarılamadı. Tekrar deneyin.')
+      dialog.alert({
+        title: 'Sonuç yok',
+        message: 'Ses kaydından hatırlatıcı çıkarılamadı. Tekrar deneyin.',
+        icon: 'information-circle-outline',
+        iconColor: colors.warning,
+      })
       reset()
     }
   }
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Hata', error, [{ text: 'Tamam', onPress: reset }])
+      dialog.alert({
+        title: 'Hata',
+        message: error,
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+        buttons: [{ text: 'Tamam', onPress: reset }],
+      })
     }
   }, [error, reset])
 

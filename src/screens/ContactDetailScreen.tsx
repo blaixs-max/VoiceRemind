@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Linking,
-  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -17,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
 import { useContactStore } from '../stores/contactStore'
 import { useReminderStore } from '../stores/reminderStore'
+import { dialog } from '../components/AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow, getAvatarColor } from '../utils/theme'
 import type { Reminder } from '../models/types'
 import type { ContactsStackParamList } from '../navigation/types'
@@ -44,14 +44,13 @@ export default function ContactDetailScreen() {
   const avatarColor = getAvatarColor(contact.contactName)
 
   const handleDelete = () => {
-    Alert.alert('Cariyi Sil', `${contact.company} silinecek.`, [
-      { text: 'İptal', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: () => { deleteContact(contact.id); navigation.goBack() },
-      },
-    ])
+    dialog.confirm({
+      title: 'Cariyi Sil',
+      message: `${contact.company} silinecek. Bu işlem geri alınamaz.`,
+      destructive: true,
+      confirmText: 'Sil',
+      onConfirm: () => { deleteContact(contact.id); navigation.goBack() },
+    })
   }
 
   const actions = [

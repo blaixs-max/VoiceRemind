@@ -11,11 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../stores/authStore'
+import { dialog } from '../components/AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
 
 export default function AuthScreen() {
@@ -31,10 +31,20 @@ export default function AuthScreen() {
   const handleSubmit = async () => {
     const trimmedEmail = email.trim().toLowerCase()
     if (!trimmedEmail || !password) {
-      return Alert.alert('Hata', 'E-posta ve şifre gereklidir.')
+      return dialog.alert({
+        title: 'Hata',
+        message: 'E-posta ve şifre gereklidir.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
     }
     if (password.length < 6) {
-      return Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.')
+      return dialog.alert({
+        title: 'Hata',
+        message: 'Şifre en az 6 karakter olmalıdır.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
     }
 
     const error = isLogin
@@ -42,14 +52,20 @@ export default function AuthScreen() {
       : await signUp(trimmedEmail, password)
 
     if (error) {
-      Alert.alert(
-        isLogin ? 'Giriş Başarısız' : 'Kayıt Başarısız',
-        translateError(error)
-      )
+      dialog.alert({
+        title: isLogin ? 'Giriş Başarısız' : 'Kayıt Başarısız',
+        message: translateError(error),
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
     } else if (!isLogin) {
-      Alert.alert('Başarılı', 'Hesabınız oluşturuldu. Giriş yapabilirsiniz.', [
-        { text: 'Tamam', onPress: () => setIsLogin(true) },
-      ])
+      dialog.alert({
+        title: 'Başarılı',
+        message: 'Hesabınız oluşturuldu. Giriş yapabilirsiniz.',
+        icon: 'checkmark-circle-outline',
+        iconColor: colors.success,
+        buttons: [{ text: 'Tamam', onPress: () => setIsLogin(true) }],
+      })
     }
   }
 

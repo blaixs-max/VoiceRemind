@@ -9,6 +9,7 @@ import * as Notifications from 'expo-notifications'
 import { Ionicons } from '@expo/vector-icons'
 
 import ErrorBoundary from './src/components/ErrorBoundary'
+import { DialogHost } from './src/components/AppDialog'
 import AuthScreen from './src/screens/AuthScreen'
 import HomeScreen from './src/screens/HomeScreen'
 import ContactsScreen from './src/screens/ContactsScreen'
@@ -190,6 +191,8 @@ export default function App() {
       <NavigationContainer>
         {session ? <MainApp /> : <AuthScreen />}
       </NavigationContainer>
+      {/* Tüm uygulama için tek merkezi dialog host — Alert.alert/ActionSheetIOS yerine */}
+      <DialogHost />
     </ErrorBoundary>
   )
 }

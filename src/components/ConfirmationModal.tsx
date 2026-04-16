@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo } from 'react'
 import {
-  View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, Alert,
+  View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import ReminderCard from './ReminderCard'
+import { dialog } from './AppDialog'
 import { CONFIDENCE, DEFAULT_TIMEZONE } from '../utils/config'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
@@ -81,7 +82,14 @@ export default function ConfirmationModal({ visible, data, onClose }: Props) {
         })
       }
       onClose()
-    } catch { Alert.alert('Hata', 'Hatırlatıcı kaydedilemedi.') }
+    } catch {
+      dialog.alert({
+        title: 'Hata',
+        message: 'Hatırlatıcı kaydedilemedi.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
+    }
     finally { setSaving(false) }
   }
 

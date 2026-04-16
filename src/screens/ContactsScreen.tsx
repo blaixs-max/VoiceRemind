@@ -9,12 +9,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useContactStore } from '../stores/contactStore'
+import { dialog } from '../components/AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow, getAvatarColor } from '../utils/theme'
 import type { Contact } from '../models/types'
 import type { ContactsStackParamList } from '../navigation/types'
@@ -38,14 +38,13 @@ export default function ContactsScreen() {
   }, [contacts, search])
 
   const handleDelete = useCallback((contact: Contact) => {
-    Alert.alert(
-      'Cariyi Sil',
-      `${contact.company} — ${contact.contactName} silinecek.`,
-      [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Sil', style: 'destructive', onPress: () => deleteContact(contact.id) },
-      ]
-    )
+    dialog.confirm({
+      title: 'Cariyi Sil',
+      message: `${contact.company} — ${contact.contactName} silinecek. Bu işlem geri alınamaz.`,
+      destructive: true,
+      confirmText: 'Sil',
+      onConfirm: () => { deleteContact(contact.id) },
+    })
   }, [deleteContact])
 
   const renderItem = useCallback(({ item }: { item: Contact }) => {

@@ -11,13 +11,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
 import { useContactStore } from '../stores/contactStore'
+import { dialog } from './AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
 import type { ContactsStackParamList } from '../navigation/types'
 
@@ -72,8 +72,22 @@ export default function ContactFormScreen() {
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
-    if (!form.company.trim()) return Alert.alert('Hata', 'Firma adı zorunludur.')
-    if (!form.contactName.trim()) return Alert.alert('Hata', 'Yetkili adı zorunludur.')
+    if (!form.company.trim()) {
+      return dialog.alert({
+        title: 'Hata',
+        message: 'Firma adı zorunludur.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
+    }
+    if (!form.contactName.trim()) {
+      return dialog.alert({
+        title: 'Hata',
+        message: 'Yetkili adı zorunludur.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
+    }
 
     const data = {
       company: form.company.trim(),
@@ -90,7 +104,12 @@ export default function ContactFormScreen() {
       navigation.goBack()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Kaydetme başarısız.'
-      Alert.alert('Hata', message)
+      dialog.alert({
+        title: 'Hata',
+        message,
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
     } finally {
       setSaving(false)
     }

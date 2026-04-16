@@ -11,8 +11,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  ActionSheetIOS,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -21,6 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
+import { dialog } from '../components/AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
 import type { RemindersStackParamList } from '../navigation/types'
 
@@ -70,55 +69,39 @@ export default function ReminderEditScreen() {
 
   const pickContact = () => {
     if (contacts.length === 0) {
-      return Alert.alert('Cari Yok', 'Önce cari listesine kişi ekleyin.')
+      return dialog.alert({
+        title: 'Cari Yok',
+        message: 'Önce cari listesine kişi ekleyin.',
+        icon: 'information-circle-outline',
+        iconColor: colors.primary,
+      })
     }
-    const options = [
-      '(Carisiz)',
-      ...contacts.map((c) => c.company),
-      'İptal',
-    ]
-    const cancelIndex = options.length - 1
-
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex, title: 'Cari Seç' },
-        (i) => {
-          if (i === 0) setContactId(null)
-          else if (i > 0 && i < cancelIndex) setContactId(contacts[i - 1].id)
-        }
-      )
-    } else {
-      Alert.alert('Cari Seç', undefined, [
-        { text: '(Carisiz)', onPress: () => setContactId(null) },
+    dialog.options({
+      title: 'Cari Seç',
+      options: [
+        {
+          label: '(Carisiz)',
+          icon: 'remove-circle-outline',
+          onPress: () => setContactId(null),
+        },
         ...contacts.map((c) => ({
-          text: c.company,
+          label: c.company,
+          icon: 'business-outline' as const,
           onPress: () => setContactId(c.id),
         })),
-        { text: 'İptal', style: 'cancel' as const },
-      ])
-    }
+      ],
+    })
   }
 
   const pickRemindBefore = () => {
-    const options = [...REMIND_BEFORE_OPTIONS.map((o) => o.label), 'İptal']
-    const cancelIndex = options.length - 1
-
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex, title: 'Ne zaman hatırlatılsın?' },
-        (i) => {
-          if (i >= 0 && i < cancelIndex) setRemindBefore(REMIND_BEFORE_OPTIONS[i].value)
-        }
-      )
-    } else {
-      Alert.alert('Ne zaman hatırlatılsın?', undefined, [
-        ...REMIND_BEFORE_OPTIONS.map((o) => ({
-          text: o.label,
-          onPress: () => setRemindBefore(o.value),
-        })),
-        { text: 'İptal', style: 'cancel' as const },
-      ])
-    }
+    dialog.options({
+      title: 'Ne zaman hatırlatılsın?',
+      options: REMIND_BEFORE_OPTIONS.map((o) => ({
+        label: o.label,
+        icon: 'notifications-outline' as const,
+        onPress: () => setRemindBefore(o.value),
+      })),
+    })
   }
 
   const onDateChange = (_: unknown, selected?: Date) => {
@@ -142,7 +125,14 @@ export default function ReminderEditScreen() {
   }
 
   const handleSave = async () => {
-    if (!title.trim()) return Alert.alert('Hata', 'Başlık boş olamaz.')
+    if (!title.trim()) {
+      return dialog.alert({
+        title: 'Hata',
+        message: 'Başlık boş olamaz.',
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
+    }
 
     setSaving(true)
     try {
@@ -155,24 +145,28 @@ export default function ReminderEditScreen() {
       navigation.goBack()
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Kaydetme başarısız.'
-      Alert.alert('Hata', message)
+      dialog.alert({
+        title: 'Hata',
+        message,
+        icon: 'alert-circle-outline',
+        iconColor: colors.danger,
+      })
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = () => {
-    Alert.alert('Sil', `"${reminder.title}" silinecek.`, [
-      { text: 'İptal', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteReminder(reminderId)
-          navigation.goBack()
-        },
+    dialog.confirm({
+      title: 'Hatırlatıcıyı Sil',
+      message: `"${reminder.title}" silinecek. Bu işlem geri alınamaz.`,
+      destructive: true,
+      confirmText: 'Sil',
+      onConfirm: async () => {
+        await deleteReminder(reminderId)
+        navigation.goBack()
       },
-    ])
+    })
   }
 
   const dateLabel = datetime.toLocaleDateString('tr-TR', {
