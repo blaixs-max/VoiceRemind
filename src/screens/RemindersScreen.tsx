@@ -179,8 +179,8 @@ export default function RemindersScreen() {
             >
               <Ionicons
                 name={important ? 'flag' : 'flag-outline'}
-                size={18}
-                color={important ? colors.warning : colors.textMuted}
+                size={20}
+                color={important ? colors.warning : colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   },
   flagBtn: {
     marginLeft: spacing.sm,
-    padding: 2,
+    padding: 4,
   },
   importantBadge: {
     paddingHorizontal: 8,
