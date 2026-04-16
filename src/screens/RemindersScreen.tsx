@@ -20,6 +20,7 @@ import { useContactStore } from '../stores/contactStore'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
 import type { Reminder } from '../models/types'
 import type { RemindersStackParamList } from '../navigation/types'
+import ReminderActionSheet from '../components/ReminderActionSheet'
 
 type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderList'>
 
@@ -37,6 +38,9 @@ export default function RemindersScreen() {
 
   const [filter, setFilter] = useState<FilterMode>('pending')
   const [contactFilter, setContactFilter] = useState<string | null>(null)
+
+  // Uygulama içi aksiyon menüsünün hedefi. null iken menü kapalı.
+  const [actionTarget, setActionTarget] = useState<Reminder | null>(null)
 
   // Ekran saat başına kadar açık kalırsa grupları doğru tutmak için
   // 60 sn'de bir 'now' tick'i — useMemo bu tick'e bağlı olduğundan gece yarısı
@@ -79,35 +83,27 @@ export default function RemindersScreen() {
 
   const totalCount = sections.reduce((s, sec) => s + sec.data.length, 0)
 
+  // Long-press → uygulama içi aksiyon menüsünü aç
   const showActions = useCallback((r: Reminder) => {
-    const toggleLabel = r.status === 'pending' ? 'Tamamla' : 'Geri Al'
-    const opts = ['Düzenle', toggleLabel, 'Sil', 'İptal']
+    setActionTarget(r)
+  }, [])
 
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options: opts, destructiveButtonIndex: 2, cancelButtonIndex: 3, title: r.title },
-        (i) => {
-          if (i === 0) navigation.navigate('ReminderEdit', { reminderId: r.id })
-          else if (i === 1) r.status === 'pending' ? markDone(r.id) : markPending(r.id)
-          else if (i === 2) confirmDelete(r)
-        }
-      )
-    } else {
-      Alert.alert(r.title, '', [
-        { text: 'Düzenle', onPress: () => navigation.navigate('ReminderEdit', { reminderId: r.id }) },
-        { text: toggleLabel, onPress: () => { r.status === 'pending' ? markDone(r.id) : markPending(r.id) } },
-        { text: 'Sil', style: 'destructive', onPress: () => confirmDelete(r) },
-        { text: 'İptal', style: 'cancel' },
-      ])
-    }
-  }, [markDone, markPending, deleteReminder, navigation])
-
-  const confirmDelete = (r: Reminder) => {
+  // Silme onayı hâlâ sistem Alert — "yanlışlıkla sil" korumasının en tanıdık yolu.
+  const confirmDelete = useCallback((r: Reminder) => {
     Alert.alert('Sil', `"${r.title}" silinecek.`, [
       { text: 'İptal', style: 'cancel' },
       { text: 'Sil', style: 'destructive', onPress: () => deleteReminder(r.id) },
     ])
-  }
+  }, [deleteReminder])
+
+  const handleToggleStatus = useCallback((r: Reminder) => {
+    if (r.status === 'pending') markDone(r.id)
+    else markPending(r.id)
+  }, [markDone, markPending])
+
+  const handleEditReminder = useCallback((r: Reminder) => {
+    navigation.navigate('ReminderEdit', { reminderId: r.id })
+  }, [navigation])
 
   const renderItem = useCallback(({ item }: { item: Reminder }) => {
     const t = new Date(item.datetime)
@@ -271,6 +267,15 @@ export default function RemindersScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Uygulama içi aksiyon menüsü — long-press ile açılır */}
+      <ReminderActionSheet
+        reminder={actionTarget}
+        onClose={() => setActionTarget(null)}
+        onEdit={handleEditReminder}
+        onToggleStatus={handleToggleStatus}
+        onDelete={confirmDelete}
+      />
     </View>
   )
 }
