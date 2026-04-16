@@ -263,3 +263,15 @@ OPENAI_API_KEY=sk-proj-xxx
 - useParseAudio'da `filterByTranscript` import edilip kullanılmıyor (getSummaries kullanılıyor)
 - Expo Go ile çalıştırma hala dev server gerektiriyor (iPhone için)
 - Free tier Supabase: 500MB DB, 1GB storage, 50K auth users
+
+## Çözülmesi Gereken Sorunlar
+
+- [ ] **RemindersScreen — "Bugün" ve "Önemli" filtre segmentleri düzgün çalışmadı** (commit `d43fdaa`)
+  - 5 segment'li horizontal-scroll segment bar eklendi (Bekliyor/Tamamlandı/Tümü/Bugün/Önemli)
+  - Kullanıcı "bu olmadı" dedi — net semptom henüz belirsiz; detaylar ileride araştırılmalı
+  - Olası suçlular:
+    - `ScrollView horizontal` içinde `contentContainerStyle={styles.segmentRow}` ile layout bozulmuş olabilir (segment'ler full width kaplamayıp sola yapışıyor olabilir)
+    - `alignSelf: 'flex-start'` yüzünden sağ tarafta büyük boşluk + background çubuğu kesik görünebilir
+    - `flex: 1` kaldırıldığı için segment'ler küçük ekranda daha da sıkışmış olabilir
+    - "Bugün" filtresi sadece tarih string'ine bakıyor, timezone edge-case olabilir
+  - Çözüm yönü: Ya 5 segment'i `flex: 1 + fontSize.xs` ile tek satıra sığdır, ya da segment bar'ı tümden yeniden tasarla (Gmail tarzı chip grid)
