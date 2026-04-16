@@ -7,7 +7,6 @@ import {
   Text,
   SectionList,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
@@ -232,13 +231,9 @@ export default function RemindersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Segment control — 5 filtre, küçük ekranlarda yatay kaydırılabilir */}
+      {/* Segment control — 5 filtre, tek satırda eşit bölünmüş (iOS segment control tarzı) */}
       <View style={styles.filterBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.segmentRow}
-        >
+        <View style={styles.segmentRow}>
           {FILTER_ORDER.map((mode) => {
             const active = filter === mode
             const isImportantSegment = mode === 'important'
@@ -252,18 +247,23 @@ export default function RemindersScreen() {
                 {isImportantSegment && (
                   <Ionicons
                     name={active ? 'flag' : 'flag-outline'}
-                    size={13}
+                    size={11}
                     color={active ? colors.warning : colors.textMuted}
-                    style={styles.segmentIcon}
                   />
                 )}
-                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
+                <Text
+                  style={[styles.segmentText, active && styles.segmentTextActive]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
+                  allowFontScaling={false}
+                >
                   {FILTER_LABELS[mode]}
                 </Text>
               </TouchableOpacity>
             )
           })}
-        </ScrollView>
+        </View>
 
         {contacts.length > 0 && (
           <TouchableOpacity
@@ -360,25 +360,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     padding: 2,
     gap: 2,
-    alignSelf: 'flex-start',
   },
   segment: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 3,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 4,
     borderRadius: 6,
   },
   segmentActive: {
     backgroundColor: colors.white,
     ...shadow.sm,
   },
-  segmentIcon: {
-    marginRight: 2,
-  },
   segmentText: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.xs,
     color: colors.textMuted,
     fontWeight: fontWeight.medium,
   },
