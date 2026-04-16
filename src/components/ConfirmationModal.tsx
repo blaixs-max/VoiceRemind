@@ -76,6 +76,7 @@ export default function ConfirmationModal({ visible, data, onClose }: Props) {
           remindBefore: 0,
           contactId,
           status: 'pending',
+          isImportant: false, // yeni oluşturulan sesli hatırlatıcı varsayılan olarak normal
           timezone: DEFAULT_TIMEZONE,
           sourceText: data?.transcript ?? '',
           confidence: r.confidence,

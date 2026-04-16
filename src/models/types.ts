@@ -24,6 +24,7 @@ export type Reminder = {
   contactId: string | null  // nullable — carisiz reminder olabilir
   notificationId: string    // expo-notifications identifier
   status: 'pending' | 'done' | 'dismissed'
+  isImportant: boolean      // kullanıcı "Önemli" bayrağı — sarı flag
   timezone: string          // "Europe/Istanbul"
   sourceText: string        // orijinal Whisper transcript
   confidence: number        // 0.0 - 1.0

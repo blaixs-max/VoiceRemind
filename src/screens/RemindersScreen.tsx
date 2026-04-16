@@ -30,6 +30,7 @@ export default function RemindersScreen() {
   const markDone = useReminderStore((s) => s.markDone)
   const markPending = useReminderStore((s) => s.markPending)
   const deleteReminder = useReminderStore((s) => s.deleteReminder)
+  const toggleImportant = useReminderStore((s) => s.toggleImportant)
   const getContact = useContactStore((s) => s.getContact)
   const contacts = useContactStore((s) => s.contacts)
 
@@ -56,7 +57,11 @@ export default function RemindersScreen() {
     else if (filter === 'done') list = list.filter((r) => r.status === 'done')
     if (contactFilter) list = list.filter((r) => r.contactId === contactFilter)
 
-    list = [...list].sort((a, b) => a.datetime.localeCompare(b.datetime))
+    // Önemli olanlar kendi section'ı içinde üste — tarih sıralamasını grup içinde koruyoruz
+    list = [...list].sort((a, b) => {
+      if (a.isImportant !== b.isImportant) return a.isImportant ? -1 : 1
+      return a.datetime.localeCompare(b.datetime)
+    })
 
     const groups: Record<string, Reminder[]> = {}
     const order = ['Geçmiş', 'Bugün', 'Yarın', 'Gelecek']
@@ -129,6 +134,7 @@ export default function RemindersScreen() {
     const dateStr = t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
     const contact = item.contactId ? getContact(item.contactId) : null
     const isDone = item.status !== 'pending'
+    const important = item.isImportant
 
     return (
       <TouchableOpacity
@@ -148,8 +154,8 @@ export default function RemindersScreen() {
           <View style={styles.line} />
         </View>
 
-        {/* İçerik */}
-        <View style={styles.cardBody}>
+        {/* İçerik — önemli ise sol kenarda amber bar + hafif amber tint */}
+        <View style={[styles.cardBody, important && styles.cardBodyImportant]}>
           <View style={styles.cardTop}>
             <Text style={[styles.cardTitle, isDone && styles.textDone]} numberOfLines={1}>
               {item.title}
@@ -163,6 +169,20 @@ export default function RemindersScreen() {
                   : colors.danger
               }
             ]} />
+            {/* Önemli bayrak — basılınca toggle; nested touchable, outer onPress tetiklenmez */}
+            <TouchableOpacity
+              onPress={() => toggleImportant(item.id)}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              style={styles.flagBtn}
+              accessibilityLabel={important ? 'Önemli işaretini kaldır' : 'Önemli olarak işaretle'}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name={important ? 'flag' : 'flag-outline'}
+                size={18}
+                color={important ? colors.warning : colors.textMuted}
+              />
+            </TouchableOpacity>
           </View>
           <View style={styles.cardMeta}>
             <View style={styles.metaChip}>
@@ -176,11 +196,16 @@ export default function RemindersScreen() {
                 <Text style={styles.metaContact} numberOfLines={1}>{contact.company}</Text>
               </View>
             )}
+            {important && (
+              <View style={styles.importantBadge}>
+                <Text style={styles.importantBadgeText}>Önemli</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
     )
-  }, [getContact, showActions, markDone])
+  }, [getContact, showActions, markDone, toggleImportant])
 
   const sectionIcon = (title: string) => {
     switch (title) {
@@ -472,5 +497,24 @@ const styles = StyleSheet.create({
   emptyHint: {
     fontSize: fontSize.sm,
     color: colors.textMuted,
+  },
+  cardBodyImportant: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning,
+  },
+  flagBtn: {
+    marginLeft: spacing.sm,
+    padding: 2,
+  },
+  importantBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.warning + '1A',
+  },
+  importantBadgeText: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.warning,
   },
 })

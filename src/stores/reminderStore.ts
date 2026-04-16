@@ -16,6 +16,7 @@ type ReminderState = {
   markDone: (id: string) => Promise<void>
   markPending: (id: string) => Promise<void>
   markDismissed: (id: string) => Promise<void>
+  toggleImportant: (id: string) => Promise<void>
   getByContact: (contactId: string) => Reminder[]
   reconcileNotifications: () => Promise<void>
 }
@@ -30,6 +31,8 @@ function rowToReminder(row: any): Reminder {
     contactId: row.contact_id,
     notificationId: row.notification_id,
     status: row.status,
+    // Migration henüz uygulanmadıysa kolon eksik olabilir → güvenli default
+    isImportant: row.is_important ?? false,
     timezone: row.timezone,
     sourceText: row.source_text,
     confidence: row.confidence,
@@ -127,6 +130,7 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
         contact_id: data.contactId,
         notification_id: notificationId,
         status: data.status,
+        is_important: data.isImportant ?? false,
         timezone: data.timezone,
         source_text: data.sourceText,
         confidence: data.confidence,
@@ -162,6 +166,7 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
     if (data.remindBefore !== undefined) updateData.remind_before = data.remindBefore
     if (data.contactId !== undefined) updateData.contact_id = data.contactId
     if (data.status !== undefined) updateData.status = data.status
+    if (data.isImportant !== undefined) updateData.is_important = data.isImportant
     updateData.notification_id = notificationId
 
     const { error } = await supabase
@@ -248,6 +253,35 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
         r.id === id ? { ...r, status: 'dismissed' as const, notificationId: '' } : r
       ),
     }))
+  },
+
+  toggleImportant: async (id) => {
+    const existing = get().reminders.find((r) => r.id === id)
+    if (!existing) return
+
+    const next = !existing.isImportant
+
+    // Optimistic update — UI anında tepki versin, DB arkada
+    set((s) => ({
+      reminders: s.reminders.map((r) =>
+        r.id === id ? { ...r, isImportant: next } : r
+      ),
+    }))
+
+    const { error } = await supabase
+      .from('reminders')
+      .update({ is_important: next })
+      .eq('id', id)
+
+    // DB hatası varsa UI'yı geri al ki tutarsızlık olmasın
+    if (error) {
+      set((s) => ({
+        reminders: s.reminders.map((r) =>
+          r.id === id ? { ...r, isImportant: existing.isImportant } : r
+        ),
+      }))
+      console.error('toggleImportant error:', error)
+    }
   },
 
   getByContact: (contactId) => {
