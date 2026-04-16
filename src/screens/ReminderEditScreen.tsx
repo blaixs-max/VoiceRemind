@@ -1,0 +1,394 @@
+// src/screens/ReminderEditScreen.tsx
+// Hatırlatıcı düzenleme — başlık + tarih/saat + cari + remindBefore
+
+import React, { useState, useLayoutEffect } from 'react'
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActionSheetIOS,
+} from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { useNavigation, useRoute } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RouteProp } from '@react-navigation/native'
+import { useReminderStore } from '../stores/reminderStore'
+import { useContactStore } from '../stores/contactStore'
+import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
+import type { RemindersStackParamList } from '../navigation/types'
+
+type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderEdit'>
+type Rt = RouteProp<RemindersStackParamList, 'ReminderEdit'>
+
+const REMIND_BEFORE_OPTIONS = [
+  { value: 0, label: 'Tam zamanında' },
+  { value: 5, label: '5 dk önce' },
+  { value: 15, label: '15 dk önce' },
+  { value: 30, label: '30 dk önce' },
+  { value: 60, label: '1 saat önce' },
+]
+
+export default function ReminderEditScreen() {
+  const navigation = useNavigation<Nav>()
+  const route = useRoute<Rt>()
+  const { reminderId } = route.params
+
+  const reminder = useReminderStore((s) => s.reminders.find((r) => r.id === reminderId))
+  const updateReminder = useReminderStore((s) => s.updateReminder)
+  const deleteReminder = useReminderStore((s) => s.deleteReminder)
+  const contacts = useContactStore((s) => s.contacts)
+  const getContact = useContactStore((s) => s.getContact)
+
+  // Hatırlatıcı yoksa (silinmiş olabilir) — geri dön
+  useLayoutEffect(() => {
+    if (!reminder) navigation.goBack()
+  }, [reminder, navigation])
+
+  // Form state — reminder varsa initial değerleri yükle
+  const [title, setTitle] = useState(reminder?.title ?? '')
+  const [datetime, setDatetime] = useState<Date>(
+    reminder ? new Date(reminder.datetime) : new Date()
+  )
+  const [contactId, setContactId] = useState<string | null>(reminder?.contactId ?? null)
+  const [remindBefore, setRemindBefore] = useState<number>(reminder?.remindBefore ?? 0)
+  const [saving, setSaving] = useState(false)
+
+  // Android'de picker tek seferde açılıp kapanır; iOS'ta inline gösteririz
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showTimePicker, setShowTimePicker] = useState(false)
+
+  if (!reminder) return null
+
+  const selectedContact = contactId ? getContact(contactId) : null
+
+  const pickContact = () => {
+    if (contacts.length === 0) {
+      return Alert.alert('Cari Yok', 'Önce cari listesine kişi ekleyin.')
+    }
+    const options = [
+      '(Carisiz)',
+      ...contacts.map((c) => c.company),
+      'İptal',
+    ]
+    const cancelIndex = options.length - 1
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIndex, title: 'Cari Seç' },
+        (i) => {
+          if (i === 0) setContactId(null)
+          else if (i > 0 && i < cancelIndex) setContactId(contacts[i - 1].id)
+        }
+      )
+    } else {
+      Alert.alert('Cari Seç', undefined, [
+        { text: '(Carisiz)', onPress: () => setContactId(null) },
+        ...contacts.map((c) => ({
+          text: c.company,
+          onPress: () => setContactId(c.id),
+        })),
+        { text: 'İptal', style: 'cancel' as const },
+      ])
+    }
+  }
+
+  const pickRemindBefore = () => {
+    const options = [...REMIND_BEFORE_OPTIONS.map((o) => o.label), 'İptal']
+    const cancelIndex = options.length - 1
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIndex, title: 'Ne zaman hatırlatılsın?' },
+        (i) => {
+          if (i >= 0 && i < cancelIndex) setRemindBefore(REMIND_BEFORE_OPTIONS[i].value)
+        }
+      )
+    } else {
+      Alert.alert('Ne zaman hatırlatılsın?', undefined, [
+        ...REMIND_BEFORE_OPTIONS.map((o) => ({
+          text: o.label,
+          onPress: () => setRemindBefore(o.value),
+        })),
+        { text: 'İptal', style: 'cancel' as const },
+      ])
+    }
+  }
+
+  const onDateChange = (_: unknown, selected?: Date) => {
+    // Android: picker tek seferde kapanır; iOS: inline kalır
+    if (Platform.OS === 'android') setShowDatePicker(false)
+    if (selected) {
+      // Sadece tarih kısmını değiştir, saat korunsun
+      const next = new Date(datetime)
+      next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate())
+      setDatetime(next)
+    }
+  }
+
+  const onTimeChange = (_: unknown, selected?: Date) => {
+    if (Platform.OS === 'android') setShowTimePicker(false)
+    if (selected) {
+      const next = new Date(datetime)
+      next.setHours(selected.getHours(), selected.getMinutes(), 0, 0)
+      setDatetime(next)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!title.trim()) return Alert.alert('Hata', 'Başlık boş olamaz.')
+
+    setSaving(true)
+    try {
+      await updateReminder(reminderId, {
+        title: title.trim(),
+        datetime: datetime.toISOString(),
+        contactId,
+        remindBefore,
+      })
+      navigation.goBack()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Kaydetme başarısız.'
+      Alert.alert('Hata', message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = () => {
+    Alert.alert('Sil', `"${reminder.title}" silinecek.`, [
+      { text: 'İptal', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteReminder(reminderId)
+          navigation.goBack()
+        },
+      },
+    ])
+  }
+
+  const dateLabel = datetime.toLocaleDateString('tr-TR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+  const timeLabel = datetime.toLocaleTimeString('tr-TR', {
+    hour: '2-digit', minute: '2-digit',
+  })
+  const remindBeforeLabel =
+    REMIND_BEFORE_OPTIONS.find((o) => o.value === remindBefore)?.label ?? 'Tam zamanında'
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          {/* Başlık */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="document-text-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.label}>Başlık *</Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Hatırlatıcı başlığı"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+
+          {/* Tarih */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.label}>Tarih</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.pickerInput}
+              onPress={() => setShowDatePicker((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.pickerText}>{dateLabel}</Text>
+              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={datetime}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={onDateChange}
+                locale="tr-TR"
+              />
+            )}
+          </View>
+
+          {/* Saat */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.label}>Saat</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.pickerInput}
+              onPress={() => setShowTimePicker((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.pickerText}>{timeLabel}</Text>
+              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+            {showTimePicker && (
+              <DateTimePicker
+                value={datetime}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onTimeChange}
+                is24Hour
+                locale="tr-TR"
+              />
+            )}
+          </View>
+
+          {/* Cari */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="person-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.label}>Cari</Text>
+            </View>
+            <TouchableOpacity style={styles.pickerInput} onPress={pickContact} activeOpacity={0.7}>
+              <Text style={[styles.pickerText, !selectedContact && styles.pickerPlaceholder]}>
+                {selectedContact
+                  ? `${selectedContact.company} — ${selectedContact.contactName}`
+                  : 'Carisiz'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          {/* RemindBefore */}
+          <View style={styles.fieldGroup}>
+            <View style={styles.labelRow}>
+              <Ionicons name="notifications-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.label}>Hatırlatma Zamanı</Text>
+            </View>
+            <TouchableOpacity style={styles.pickerInput} onPress={pickRemindBefore} activeOpacity={0.7}>
+              <Text style={styles.pickerText}>{remindBeforeLabel}</Text>
+              <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          onPress={handleSave}
+          activeOpacity={0.8}
+          disabled={saving}
+        >
+          <Ionicons name="checkmark-circle" size={20} color={colors.textInverse} />
+          <Text style={styles.saveButtonText}>
+            {saving ? 'Kaydediliyor...' : 'Güncelle'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDelete}
+          activeOpacity={0.7}
+          disabled={saving}
+        >
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+          <Text style={styles.deleteButtonText}>Hatırlatıcıyı Sil</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  scroll: { padding: spacing.lg, paddingBottom: 40 },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...shadow.sm,
+  },
+  fieldGroup: { marginBottom: spacing.lg },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+  },
+  input: {
+    backgroundColor: colors.borderLight,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.text,
+  },
+  pickerInput: {
+    backgroundColor: colors.borderLight,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pickerText: {
+    fontSize: fontSize.md,
+    color: colors.text,
+    flex: 1,
+  },
+  pickerPlaceholder: { color: colors.textMuted },
+  saveButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xxl,
+    gap: spacing.sm,
+    ...shadow.glow(colors.primary),
+  },
+  saveButtonText: {
+    color: colors.textInverse,
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  deleteButtonText: {
+    color: colors.danger,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.medium,
+  },
+})
