@@ -266,12 +266,8 @@ OPENAI_API_KEY=sk-proj-xxx
 
 ## Çözülmesi Gereken Sorunlar
 
-- [ ] **RemindersScreen — "Bugün" ve "Önemli" filtre segmentleri düzgün çalışmadı** (commit `d43fdaa`)
-  - 5 segment'li horizontal-scroll segment bar eklendi (Bekliyor/Tamamlandı/Tümü/Bugün/Önemli)
-  - Kullanıcı "bu olmadı" dedi — net semptom henüz belirsiz; detaylar ileride araştırılmalı
-  - Olası suçlular:
-    - `ScrollView horizontal` içinde `contentContainerStyle={styles.segmentRow}` ile layout bozulmuş olabilir (segment'ler full width kaplamayıp sola yapışıyor olabilir)
-    - `alignSelf: 'flex-start'` yüzünden sağ tarafta büyük boşluk + background çubuğu kesik görünebilir
-    - `flex: 1` kaldırıldığı için segment'ler küçük ekranda daha da sıkışmış olabilir
-    - "Bugün" filtresi sadece tarih string'ine bakıyor, timezone edge-case olabilir
-  - Çözüm yönü: Ya 5 segment'i `flex: 1 + fontSize.xs` ile tek satıra sığdır, ya da segment bar'ı tümden yeniden tasarla (Gmail tarzı chip grid)
+- [~] **RemindersScreen — "Bugün" ve "Önemli" filtre segmentleri** (commit `c7016f9` ile yeniden tasarlandı)
+  - İlk deneme (`d43fdaa`): horizontal ScrollView + pill segment tasarımı → kullanıcı onaylamadı
+  - İkinci deneme (`c7016f9`): iOS segment-control tarzı `flex: 1` eşit paylaşım + fontSize.xs + adjustsFontSizeToFit
+  - APK test sonuçları beklemede — kullanıcının geri dönüşüne göre değerlendirilecek
+  - Eğer hâlâ sığmazsa label'lar kısaltılabilir (`Tamamlandı` → `Bitti`)
