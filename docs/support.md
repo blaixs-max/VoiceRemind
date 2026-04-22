@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Destek — VoiceRemind
+title: Destek — Voicely AI
 permalink: /support/
 ---
 
-# VoiceRemind — Destek
+# Voicely AI — Destek
 
 Yardım mı lazım? Doğru yerdesiniz.
 
@@ -14,10 +14,10 @@ Yardım mı lazım? Doğru yerdesiniz.
 
 iOS'ta:
 1. **Ayarlar → Gizlilik ve Güvenlik → Mikrofon**
-2. VoiceRemind'ı bulup izin verin
+2. Voicely AI'ı bulup izin verin
 
 Android'de:
-1. **Ayarlar → Uygulamalar → VoiceRemind → İzinler**
+1. **Ayarlar → Uygulamalar → Voicely AI → İzinler**
 2. Mikrofon iznini aktif edin
 
 ### 🔔 Bildirimler gelmiyor
@@ -60,4 +60,4 @@ Uygulamada eksik bulduğunuz bir şey mi var? Yeni bir fikriniz mi var? Duymak i
 
 ---
 
-*VoiceRemind — Sesli Hatırlatıcı + Mini CRM*
+*Voicely AI — Sesli Hatırlatıcı + Mini CRM*

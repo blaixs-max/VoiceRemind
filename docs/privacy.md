@@ -1,18 +1,18 @@
 ---
 layout: default
-title: Gizlilik Politikası — VoiceRemind
+title: Gizlilik Politikası — Voicely AI
 permalink: /privacy/
 ---
 
-# VoiceRemind — Gizlilik Politikası
+# Voicely AI — Gizlilik Politikası
 
 **Son güncelleme:** 22 Nisan 2026
 
-Bu gizlilik politikası, VoiceRemind uygulaması ("Uygulama", "biz") tarafından toplanan verilerin nasıl işlendiğini açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş sayılırsınız.
+Bu gizlilik politikası, Voicely AI uygulaması ("Uygulama", "biz") tarafından toplanan verilerin nasıl işlendiğini açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş sayılırsınız.
 
 ## 1. Veri Sorumlusu
 
-VoiceRemind bireysel bir geliştirici tarafından geliştirilmektedir. Her türlü soru, talep ve KVKK kapsamındaki haklarınız için iletişim:
+Voicely AI bireysel bir geliştirici tarafından geliştirilmektedir. Her türlü soru, talep ve KVKK kapsamındaki haklarınız için iletişim:
 
 - **E-posta:** blaixs@gmail.com
 
@@ -109,7 +109,7 @@ Bu politika güncellenebilir. Önemli değişiklikleri uygulama içinde ve bu sa
 Sorularınız, talepleriniz ve şikayetleriniz için:
 
 - **E-posta:** blaixs@gmail.com
-- **Uygulama:** VoiceRemind (iOS / Android)
+- **Uygulama:** Voicely AI (iOS / Android)
 
 ---
 

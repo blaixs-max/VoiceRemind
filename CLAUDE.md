@@ -1,4 +1,7 @@
-# VoiceRemind — Sesli Hatirlatici + Mini CRM
+# Voicely AI — Sesli Hatirlatici + Mini CRM
+
+> **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
+> **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
 ## Proje Ozeti
 
@@ -211,6 +214,11 @@ OPENAI_API_KEY=sk-proj-xxx
 
 ### Öncelik 0 — Yayın (Mevcut Faz)
 
+**Ürün kimliği (kesinleşti)**
+- [x] App adı: **Voicely AI** (Apple Name 10 char, Google Title 30 char — `docs/store-listing.md`)
+- [x] Ülke stratejisi: **Türkiye-first** (Faz 1) → Dünya (Faz 2, EN localization ile)
+- [x] Logo/wordmark teslim alındı (`assets/brand/`) — ⚠️ `assets/icon.png` için **mark-only 1024x1024** (metin yok, alpha yok) versiyonu bekleniyor
+
 **iOS — App Store yolculuğu** ($99/yıl Apple Developer)
 - [ ] Apple Developer Program enrollment (Individual, bekleme ~1 gün)
 - [x] app.json iOS optimizasyonu (export compliance, build number)
@@ -243,9 +251,11 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] Data Safety cevapları: `docs/data-safety.md`
 - [x] Store listing copy: `docs/store-listing.md`
 - [ ] Screenshots setleri (iPhone 6.7, iPad 12.9, Android phone, Android tablet)
-- [ ] App icon 1024x1024 **production** (mevcut placeholder — değiştirilmeli)
-- [ ] Feature graphic 1024x500 (Play Store için)
-- [ ] App adı final kararı
+- [ ] App icon 1024x1024 **production** (mark-only, metinsiz, alpha yok — bekleniyor)
+- [ ] Feature graphic 1024x500 (Play Store için — wordmark'tan türetilecek)
+- [x] App adı: **Voicely AI**
+- [ ] **Available territories (Faz 1)**: Apple Turkey only, Google Play Turkey only
+- [ ] **Primary Language (Faz 1)**: Turkish (hem App Store hem Play)
 
 **Zaman tahmini**
 - iOS (Individual): ~1 hafta (Apple Developer onay 1 gün + hazırlık 2 gün + Review 2-3 gün)
@@ -282,7 +292,7 @@ OPENAI_API_KEY=sk-proj-xxx
 ### Öncelik 5 — Gelişmiş Özellikler
 - [ ] **Takvim entegrasyonu** — hatırlatıcıları iOS Calendar'a yazma
 - [ ] **Widget** — iOS widget ile bugünün hatırlatıcıları
-- [ ] **Siri Shortcuts** — "VoiceRemind'a hatırlatıcı ekle" ses komutu
+- [ ] **Siri Shortcuts** — "Voicely'e hatırlatıcı ekle" ses komutu
 - [ ] **İstatistik ekranı** — haftalık/aylık hatırlatıcı tamamlama oranları
 - [ ] **AI özet** — haftalık aktivite özeti (GPT ile)
 

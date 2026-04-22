@@ -1,9 +1,9 @@
 ---
 layout: default
-title: VoiceRemind — Sesli Hatırlatıcı + Mini CRM
+title: Voicely AI — Sesli Hatırlatıcı + Mini CRM
 ---
 
-# VoiceRemind
+# Voicely AI
 
 **Sesli Hatırlatıcı + Mini CRM**
 
@@ -30,4 +30,4 @@ Mikrofona basılı tutun, konuşun, hatırlatıcınız hazır. iPhone ve Android
 
 ---
 
-*VoiceRemind © 2026 — Bireysel geliştirici tarafından yapılmıştır.*
+*Voicely AI © 2026 — Bireysel geliştirici tarafından yapılmıştır.*

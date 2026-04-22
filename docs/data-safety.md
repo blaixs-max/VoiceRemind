@@ -186,6 +186,8 @@ Bu doküman, Play Console'daki **Data Safety** formunu doldururken kullanılacak
 
 **https://blaixs-max.github.io/VoiceRemind/privacy/**
 
+> Not: URL slug'ı repo adıyla (`VoiceRemind`) aynı kalıyor — GitHub Pages yayın yolu değişmesin diye repo yeniden adlandırılmadı. Store listing'de bu URL aynen kullanılacak.
+
 Bu URL:
 - Play Console'da **Policy → App content → Privacy policy** alanına
 - App Store Connect'te **App Information → Privacy Policy URL** alanına

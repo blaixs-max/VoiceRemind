@@ -1,4 +1,4 @@
-title: VoiceRemind
+title: Voicely AI
 description: Sesli Hatırlatıcı + Mini CRM
 theme: minima
 lang: tr-TR
@@ -11,7 +11,7 @@ minima:
   skin: auto
 
 # Footer
-footer_content: 'VoiceRemind © 2026. Tüm hakları saklıdır.'
+footer_content: 'Voicely AI © 2026. Tüm hakları saklıdır.'
 
 # Dahil edilmeyen dosyalar
 exclude:

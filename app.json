@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "VoiceRemind",
+    "name": "Voicely AI",
     "slug": "VoiceRemind",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "VoiceRemind sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar.",
+        "NSMicrophoneUsageDescription": "Voicely AI, sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar.",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": []
       }
@@ -43,7 +43,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "VoiceRemind sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar."
+          "microphonePermission": "Voicely AI, sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar."
         }
       ],
       "expo-notifications",
