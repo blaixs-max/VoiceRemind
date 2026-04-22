@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons'
 import ErrorBoundary from './src/components/ErrorBoundary'
 import { DialogHost } from './src/components/AppDialog'
 import AuthScreen from './src/screens/AuthScreen'
-import HomeScreen from './src/screens/HomeScreen'
+import DashboardScreen from './src/screens/DashboardScreen'
 import ContactsScreen from './src/screens/ContactsScreen'
 import ContactDetailScreen from './src/screens/ContactDetailScreen'
 import ContactFormScreen from './src/components/ContactForm'
@@ -117,8 +117,8 @@ function MainApp() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'mic'
-          if (route.name === 'Kayıt') iconName = 'mic'
+          let iconName: keyof typeof Ionicons.glyphMap = 'grid-outline'
+          if (route.name === 'Panel') iconName = 'grid-outline'
           else if (route.name === 'Hatırlatıcılar') iconName = 'notifications-outline'
           else if (route.name === 'Cariler') iconName = 'people-outline'
           return <Ionicons name={iconName} size={size} color={color} />
@@ -152,7 +152,7 @@ function MainApp() {
         ),
       })}
     >
-      <Tab.Screen name="Kayıt" component={HomeScreen} />
+      <Tab.Screen name="Panel" component={DashboardScreen} />
       <Tab.Screen
         name="Hatırlatıcılar"
         component={RemindersStackScreen}
