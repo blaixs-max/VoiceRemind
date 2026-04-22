@@ -255,10 +255,18 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] Store listing copy: `docs/store-listing.md`
 - [ ] Screenshots setleri (iPhone 6.7, iPad 12.9, Android phone, Android tablet)
 - [x] App icon 1024x1024 production — `assets/icon.png` (RGB, no alpha, full-bleed)
-- [ ] Feature graphic 1024x500 (Play Store için — wordmark'tan türetilecek)
+- [x] Feature graphic 1024x500 — `assets/brand/feature-graphic.png` (Play Store)
 - [x] App adı: **Voicely AI**
 - [ ] **Available territories (Faz 1)**: Apple Turkey only, Google Play Turkey only
 - [ ] **Primary Language (Faz 1)**: Turkish (hem App Store hem Play)
+
+**Runbook'lar (onay geldiğinde step-by-step)**
+- [x] Apple: `docs/apple-runbook.md` — enrollment onayından TestFlight'a 7 faz
+- [x] Play: `docs/play-runbook.md` — hesap onayından production'a 11 faz + Closed Testing planı
+
+**Asset pipeline script'leri (`scripts/`)**
+- [x] `process-icon.py` — source wide PNG → 1024x1024 App Store icon
+- [x] `build-feature-graphic.py` — icon + wordmark → Play Store 1024x500 banner
 
 **Zaman tahmini**
 - iOS (Individual): ~1 hafta (Apple Developer onay 1 gün + hazırlık 2 gün + Review 2-3 gün)
