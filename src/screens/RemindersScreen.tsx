@@ -6,6 +6,7 @@ import {
   View,
   Text,
   SectionList,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
@@ -46,6 +47,7 @@ export default function RemindersScreen() {
 
   const [filter, setFilter] = useState<FilterMode>('pending')
   const [contactFilter, setContactFilter] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Ekran saat başına kadar açık kalırsa grupları doğru tutmak için
   // 60 sn'de bir 'now' tick'i — useMemo bu tick'e bağlı olduğundan gece yarısı
@@ -69,6 +71,24 @@ export default function RemindersScreen() {
     else if (filter === 'important') list = list.filter((r) => r.isImportant)
     if (contactFilter) list = list.filter((r) => r.contactId === contactFilter)
 
+    // Full-text arama — title, sourceText, cari şirket adı ve kişi adında eşleşme
+    // Türkçe lowercase: "İstanbul" → "istanbul" (tr-TR locale ile i/İ/ı/I doğru dönüşür)
+    const q = searchQuery.trim().toLocaleLowerCase('tr-TR')
+    if (q) {
+      list = list.filter((r) => {
+        if (r.title.toLocaleLowerCase('tr-TR').includes(q)) return true
+        if ((r.sourceText || '').toLocaleLowerCase('tr-TR').includes(q)) return true
+        if (r.contactId) {
+          const c = getContact(r.contactId)
+          if (c) {
+            if (c.company.toLocaleLowerCase('tr-TR').includes(q)) return true
+            if (c.contactName.toLocaleLowerCase('tr-TR').includes(q)) return true
+          }
+        }
+        return false
+      })
+    }
+
     // Önemli olanlar kendi section'ı içinde üste — tarih sıralamasını grup içinde koruyoruz
     list = [...list].sort((a, b) => {
       if (a.isImportant !== b.isImportant) return a.isImportant ? -1 : 1
@@ -90,7 +110,7 @@ export default function RemindersScreen() {
     return order
       .filter((k) => groups[k].length > 0)
       .map((title) => ({ title, data: groups[title] }))
-  }, [reminders, filter, contactFilter, nowTick])
+  }, [reminders, filter, contactFilter, searchQuery, getContact, nowTick])
 
   const totalCount = sections.reduce((s, sec) => s + sec.data.length, 0)
 
@@ -265,6 +285,30 @@ export default function RemindersScreen() {
           })}
         </View>
 
+        {/* Arama — aktif segment içinde full-text filtre yapar (title + transcript + cari) */}
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={16} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Ara..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         {contacts.length > 0 && (
           <TouchableOpacity
             style={[styles.filterChip, contactFilter && styles.filterChipActive]}
@@ -306,7 +350,8 @@ export default function RemindersScreen() {
             <Ionicons name="notifications-off-outline" size={32} color={colors.textMuted} />
           </View>
           <Text style={styles.emptyText}>
-            {filter === 'pending' ? 'Bekleyen hatırlatıcı yok'
+            {searchQuery.trim() ? `"${searchQuery.trim()}" için sonuç yok`
+            : filter === 'pending' ? 'Bekleyen hatırlatıcı yok'
             : filter === 'done' ? 'Tamamlanmış hatırlatıcı yok'
             : filter === 'today' ? 'Bugün için hatırlatıcı yok'
             : filter === 'important' ? 'Önemli işaretli hatırlatıcı yok'
@@ -383,6 +428,24 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: colors.primary,
     fontWeight: fontWeight.semibold,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.borderLight,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.text,
+    paddingVertical: 4,
+    // Android'de TextInput default olarak kendi padding'ini ekler; sıfırla
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   filterChip: {
     flexDirection: 'row',
