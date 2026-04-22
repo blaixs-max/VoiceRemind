@@ -217,7 +217,10 @@ OPENAI_API_KEY=sk-proj-xxx
 **Ürün kimliği (kesinleşti)**
 - [x] App adı: **Voicely AI** (Apple Name 10 char, Google Title 30 char — `docs/store-listing.md`)
 - [x] Ülke stratejisi: **Türkiye-first** (Faz 1) → Dünya (Faz 2, EN localization ile)
-- [x] Logo/wordmark teslim alındı (`assets/brand/`) — ⚠️ `assets/icon.png` için **mark-only 1024x1024** (metin yok, alpha yok) versiyonu bekleniyor
+- [x] Logo/wordmark teslim alındı (`assets/brand/icon-source-wide.png`)
+- [x] Production app icon üretildi (`assets/icon.png` 1024x1024 RGB, no alpha, full-bleed indigo gradient — App Store ready)
+- [x] Icon pipeline script'i (`scripts/process-icon.py` — source'tan regenerate için)
+- [x] GitHub Pages canlı: https://blaixs-max.github.io/VoiceRemind/ (privacy + support + landing)
 
 **iOS — App Store yolculuğu** ($99/yıl Apple Developer)
 - [ ] Apple Developer Program enrollment (Individual, bekleme ~1 gün)
@@ -251,7 +254,7 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] Data Safety cevapları: `docs/data-safety.md`
 - [x] Store listing copy: `docs/store-listing.md`
 - [ ] Screenshots setleri (iPhone 6.7, iPad 12.9, Android phone, Android tablet)
-- [ ] App icon 1024x1024 **production** (mark-only, metinsiz, alpha yok — bekleniyor)
+- [x] App icon 1024x1024 production — `assets/icon.png` (RGB, no alpha, full-bleed)
 - [ ] Feature graphic 1024x500 (Play Store için — wordmark'tan türetilecek)
 - [x] App adı: **Voicely AI**
 - [ ] **Available territories (Faz 1)**: Apple Turkey only, Google Play Turkey only
