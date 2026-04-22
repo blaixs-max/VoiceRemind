@@ -272,40 +272,68 @@ OPENAI_API_KEY=sk-proj-xxx
 - iOS (Individual): ~1 hafta (Apple Developer onay 1 gün + hazırlık 2 gün + Review 2-3 gün)
 - Android: ~3 hafta (Closed Testing 14 gün zorunlu + hazırlık + Review 1-2 gün)
 
+### Öncelik 0.5 — Monetizasyon v1.1 (Faz 2, Launch+4-6 hafta)
+
+**Karar kaydı:** `docs/monetization-plan.md` — 2026-04-22 onaylandı
+- Model: **Freemium + Subscription** (paid-only değil, lifetime IAP değil)
+- Free tier: 10 hatırlatıcı/gün + 20 cari
+- Pro: **₺59.99/ay** veya **₺399.99/yıl** + 7 gün ücretsiz trial
+- Tech: **RevenueCat** (`react-native-purchases`) — cross-platform entitlement yönetimi
+
+**Store ön-koşulları (v1.1 öncesi halledilmeli)**
+- [ ] Apple: Paid Apps Agreement imzala + banking/tax bilgileri (2-7 gün onay)
+- [ ] Google: Payments profile + banking + tax onayı (1-3 gün)
+- [ ] RevenueCat hesap + App Store Connect API Key + Play Service Account bağla
+
+**Kod tarafı (yeni dosyalar)**
+- [ ] `src/utils/revenuecat.ts` — SDK init, offerings fetch
+- [ ] `src/utils/entitlements.ts` — `isPro()`, `canCreateReminder()` gates
+- [ ] `src/stores/subscriptionStore.ts` — Zustand entitlement state
+- [ ] `src/screens/PaywallScreen.tsx` — Custom paywall UI (Turkish-first)
+- [ ] `src/components/UpgradeBadge.tsx` + `RateLimitModal.tsx`
+- [ ] Supabase schema: `users.is_pro`, `users.subscription_expires_at`, `users.revenuecat_user_id`
+- [ ] Edge Function: daily reminder counter + 402 Payment Required gate
+
+**Store products (iki store'da aynı ID)**
+- [ ] `voicely_ai_pro_monthly` — ₺59.99/ay, 7-day trial
+- [ ] `voicely_ai_pro_yearly` — ₺399.99/yıl, 7-day trial
+
+> **Tier key**: 🟢 = Free tier, 🔒 = Pro-only (v1.1'de paywall arkasında), ⚪ = tier-neutral (her iki tier'a dahil)
+
 ### Öncelik 1 — Temel İyileştirmeler
-- [ ] **Hatırlatıcı düzenleme ekranı** — mevcut hatırlatıcıyı tap ile aç, başlık/tarih/cari düzenle
-- [ ] **Swipe aksiyonlar** — RemindersScreen'de sağa swipe = tamamla, sola swipe = sil
-- [ ] **Tekrarlayan hatırlatıcılar** — günlük/haftalık/aylık tekrar seçeneği (recurrence field)
-- [ ] **remindBefore seçeneği** — 5dk/15dk/30dk/1saat önce bildirim (kullanıcı seçimli)
-- [ ] **Kayıt çok kısa uyarısı** — stopRecording null dönerse kullanıcıya mesaj göster
+- [ ] 🟢 **Hatırlatıcı düzenleme ekranı** — mevcut hatırlatıcıyı tap ile aç, başlık/tarih/cari düzenle
+- [ ] 🟢 **Swipe aksiyonlar** — RemindersScreen'de sağa swipe = tamamla, sola swipe = sil
+- [ ] 🔒 **Tekrarlayan hatırlatıcılar** — günlük/haftalık/aylık tekrar seçeneği (Pro-only)
+- [ ] 🔒 **remindBefore seçeneği** — 5dk/15dk/30dk/1saat önce bildirim (Pro-only)
+- [ ] 🟢 **Kayıt çok kısa uyarısı** — stopRecording null dönerse kullanıcıya mesaj göster
 
 ### Öncelik 2 — Cari Yönetimi
-- [ ] **Cari düzenleme** — mevcut cariyi ContactDetailScreen'den düzenle (ContactForm edit modu zaten var)
-- [ ] **Cari bazlı hatırlatıcı listesi** — ContactDetail içinde o cariye ait hatırlatıcılar (getByContact zaten var)
-- [ ] **Cari import** — telefon rehberinden cari ekleme (expo-contacts)
-- [ ] **Cari arama iyileştirmesi** — fuzzy search + son kullanılan cariler
+- [ ] 🟢 **Cari düzenleme** — mevcut cariyi ContactDetailScreen'den düzenle
+- [ ] 🟢 **Cari bazlı hatırlatıcı listesi** — ContactDetail içinde o cariye ait hatırlatıcılar
+- [ ] 🔒 **Cari import** — telefon rehberinden cari ekleme (Pro-only, toplu ekleme)
+- [ ] 🟢 **Cari arama iyileştirmesi** — fuzzy search + son kullanılan cariler
 
 ### Öncelik 3 — Kullanıcı Deneyimi
-- [ ] **Onboarding ekranı** — ilk açılışta 3 slide tanıtım
-- [ ] **Haptic feedback** — mikrofon basma/bırakma, tamamlama, silme
-- [ ] **Ses dalgası animasyonu** — kayıt sırasında canlı ses seviyesi görseli
-- [ ] **Dark mode** — otomatik (sistem) + manuel toggle
-- [ ] **Dil seçeneği** — Türkçe/İngilizce (i18n altyapısı)
-- [ ] **Accessibility labels** — interaktif elementlere erişilebilirlik ekleme
-- [ ] **Loading skeleton** — store hydrate olurken placeholder gösterimi
-- [ ] **Pull-to-refresh** — listelerde çekip yenileme
+- [ ] ⚪ **Onboarding ekranı** — ilk açılışta 3 slide tanıtım (paywall dahil son slide)
+- [ ] 🟢 **Haptic feedback** — mikrofon basma/bırakma, tamamlama, silme
+- [ ] 🟢 **Ses dalgası animasyonu** — kayıt sırasında canlı ses seviyesi görseli
+- [ ] 🟢 **Dark mode** — otomatik (sistem) + manuel toggle
+- [ ] 🟢 **Dil seçeneği** — Türkçe/İngilizce (Faz 2 dünya açılımında)
+- [ ] 🟢 **Accessibility labels** — interaktif elementlere erişilebilirlik ekleme
+- [ ] 🟢 **Loading skeleton** — store hydrate olurken placeholder gösterimi
+- [ ] 🟢 **Pull-to-refresh** — listelerde çekip yenileme
 
 ### Öncelik 4 — Veri ve Senkronizasyon
-- [ ] **Google sign-in** — Supabase Auth'a Google OAuth ekleme
-- [ ] **Export/import** — verileri JSON/CSV olarak dışarı aktarma
-- [ ] **Silinen hatırlatıcılar** — yumuşak silme (soft delete) + geri alma
+- [ ] 🟢 **Google sign-in** — Supabase Auth'a Google OAuth ekleme
+- [ ] 🔒 **Export/import** — verileri JSON/CSV olarak dışarı aktarma (Pro-only)
+- [ ] 🟢 **Silinen hatırlatıcılar** — yumuşak silme (soft delete) + geri alma
 
 ### Öncelik 5 — Gelişmiş Özellikler
-- [ ] **Takvim entegrasyonu** — hatırlatıcıları iOS Calendar'a yazma
-- [ ] **Widget** — iOS widget ile bugünün hatırlatıcıları
-- [ ] **Siri Shortcuts** — "Voicely'e hatırlatıcı ekle" ses komutu
-- [ ] **İstatistik ekranı** — haftalık/aylık hatırlatıcı tamamlama oranları
-- [ ] **AI özet** — haftalık aktivite özeti (GPT ile)
+- [ ] 🔒 **Takvim entegrasyonu** — hatırlatıcıları iOS Calendar'a yazma (Pro-only)
+- [ ] 🔒 **Widget** — iOS widget ile bugünün hatırlatıcıları (Pro-only)
+- [ ] ⚪ **Siri Shortcuts** — "Voicely'e hatırlatıcı ekle" ses komutu (sınırlı Free, unlimited Pro)
+- [ ] 🔒 **Gelişmiş istatistik ekranı** — aylık/yıllık trendler (Pro-only)
+- [ ] 🔒 **AI özet** — haftalık aktivite özeti GPT ile (Pro-only — GPT maliyeti)
 
 ### Öncelik 6 — Yayın Hazırlığı
 - [ ] **App icon + splash screen** — profesyonel branding (indigo tema)
