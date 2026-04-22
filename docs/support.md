@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Destek — Voicely AI
+title: Destek
 permalink: /support/
 ---
 

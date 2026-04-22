@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Gizlilik Politikası — Voicely AI
+title: Gizlilik Politikası
 permalink: /privacy/
 ---
 
