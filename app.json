@@ -15,8 +15,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.blaixs.VoiceRemind",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "VoiceRemind sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar."
+        "NSMicrophoneUsageDescription": "VoiceRemind sesli hatırlatıcı oluşturmak için mikrofon erişimine ihtiyaç duyar.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": []
       }
     },
     "android": {

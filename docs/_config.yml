@@ -1,0 +1,22 @@
+title: VoiceRemind
+description: Sesli Hatırlatıcı + Mini CRM
+theme: minima
+lang: tr-TR
+
+# URL yapısı
+permalink: /:title/
+
+# Ana sayfa için başlık
+minima:
+  skin: auto
+
+# Footer
+footer_content: 'VoiceRemind © 2026. Tüm hakları saklıdır.'
+
+# Dahil edilmeyen dosyalar
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/
