@@ -209,10 +209,47 @@ OPENAI_API_KEY=sk-proj-xxx
 
 ## Yapılacaklar (Roadmap)
 
-### Öncelik 0 — Acil (Devam Edilecek)
-- [ ] **iOS standalone build** — Apple Developer hesabı ($99/yıl) + TestFlight ile dağıtım
-  - Hesap alındıktan sonra: `eas build --platform ios --profile preview`
-  - TestFlight'a yükleme: `eas submit --platform ios`
+### Öncelik 0 — Yayın (Mevcut Faz)
+
+**iOS — App Store yolculuğu** ($99/yıl Apple Developer)
+- [ ] Apple Developer Program enrollment (Individual, bekleme ~1 gün)
+- [x] app.json iOS optimizasyonu (export compliance, build number)
+- [x] Privacy Policy + Support page (docs/privacy.md, docs/support.md)
+- [x] GitHub Pages setup (docs/_config.yml, Jekyll)
+- [ ] `eas credentials` ile Apple ID bağlama
+- [ ] App Store Connect uygulama kaydı (name + bundleId + SKU)
+- [ ] İlk iOS build: `eas build --platform ios --profile preview`
+- [ ] TestFlight upload: `eas submit --platform ios --latest`
+- [ ] Screenshots: 6.7" iPhone + iPad 12.9"
+- [ ] App Store Review submit (+ demo hesap bilgisi reviewer için)
+- [ ] Production release
+
+**Android — Google Play Store yolculuğu** ($25 tek seferlik Google Play Dev)
+- [ ] Google Play Console hesap açılışı
+- [x] app.json Android optimizasyonu (POST_NOTIFICATIONS izni)
+- [x] eas.json submit profile (track: internal, releaseStatus: draft)
+- [x] Data Safety referans dokümanı (docs/data-safety.md)
+- [x] Store listing copy TR + EN (docs/store-listing.md)
+- [ ] Play Console'da app oluştur
+- [ ] Service account JSON key üret + EAS'e bağla
+- [ ] Production build (AAB): `eas build --platform android --profile production`
+- [ ] Internal track upload: `eas submit --platform android --latest`
+- [ ] Closed Testing (20 kullanıcı × 14 gün — zorunlu)
+- [ ] Production release
+
+**Ortak dosyalar (tek kaynak, iki store)**
+- [x] Privacy Policy (KVKK + Apple + Play uyumlu): `docs/privacy.md`
+- [x] Support/SSS: `docs/support.md`
+- [x] Data Safety cevapları: `docs/data-safety.md`
+- [x] Store listing copy: `docs/store-listing.md`
+- [ ] Screenshots setleri (iPhone 6.7, iPad 12.9, Android phone, Android tablet)
+- [ ] App icon 1024x1024 **production** (mevcut placeholder — değiştirilmeli)
+- [ ] Feature graphic 1024x500 (Play Store için)
+- [ ] App adı final kararı
+
+**Zaman tahmini**
+- iOS (Individual): ~1 hafta (Apple Developer onay 1 gün + hazırlık 2 gün + Review 2-3 gün)
+- Android: ~3 hafta (Closed Testing 14 gün zorunlu + hazırlık + Review 1-2 gün)
 
 ### Öncelik 1 — Temel İyileştirmeler
 - [ ] **Hatırlatıcı düzenleme ekranı** — mevcut hatırlatıcıyı tap ile aç, başlık/tarih/cari düzenle

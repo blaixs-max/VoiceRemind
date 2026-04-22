@@ -43,3 +43,8 @@ yarn-error.*
 
 # Supabase CLI cache
 supabase/.temp/
+
+# Store submission secrets (never commit)
+secrets/
+google-play-service-account.json
+AuthKey_*.p8

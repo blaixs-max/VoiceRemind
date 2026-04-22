@@ -31,7 +31,8 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "POST_NOTIFICATIONS"
       ],
       "package": "com.blaixs.VoiceRemind"
     },
