@@ -236,17 +236,19 @@ OPENAI_API_KEY=sk-proj-xxx
 - [ ] Production release
 
 **Android — Google Play Store yolculuğu** ($25 tek seferlik Google Play Dev)
-- [ ] Google Play Console hesap açılışı
+- [x] Google Play Console hesap açılışı — **onaylandı 2026-04-23**
 - [x] app.json Android optimizasyonu (POST_NOTIFICATIONS izni)
 - [x] eas.json submit profile (track: internal, releaseStatus: draft)
 - [x] Data Safety referans dokümanı (docs/data-safety.md)
 - [x] Store listing copy TR + EN (docs/store-listing.md)
-- [ ] Play Console'da app oluştur
-- [ ] Service account JSON key üret + EAS'e bağla
+- [ ] **ŞİMDİ:** Play Console'da app oluştur (`docs/play-runbook.md` Faz 1)
+- [ ] **ŞİMDİ:** `app.json` → `android.versionCode: 3` güncelle (eski build 2 kullanıldı)
+- [ ] Service account JSON üret + `secrets/google-play-service-account.json` konumuna koy
 - [ ] Production build (AAB): `eas build --platform android --profile production`
 - [ ] Internal track upload: `eas submit --platform android --latest`
-- [ ] Closed Testing (20 kullanıcı × 14 gün — zorunlu)
-- [ ] Production release
+- [ ] Store listing + Data Safety + Content Rating + Target Audience doldur
+- [ ] Closed Testing track'e promote → 20 tester davet → 14 gün sayacı başlat
+- [ ] Production release → TR only → Review 1-3 gün
 
 **Ortak dosyalar (tek kaynak, iki store)**
 - [x] Privacy Policy (KVKK + Apple + Play uyumlu): `docs/privacy.md`
