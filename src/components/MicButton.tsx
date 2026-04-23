@@ -1,5 +1,5 @@
 // src/components/MicButton.tsx
-// Premium mikrofon butonu — gradient ring + glow pulse + süre
+// Premium mikrofon butonu — gradient (purple→orange sunset) + glow pulse + süre
 
 import React, { useEffect, useRef } from 'react'
 import {
@@ -9,8 +9,9 @@ import {
   Animated,
   StyleSheet,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import { colors, fontSize, fontWeight, shadow } from '../utils/theme'
+import { colors, fontSize, fontWeight, shadow, gradients } from '../utils/theme'
 import type { RecordingState } from '../hooks/useRecording'
 
 type Props = {
@@ -18,9 +19,11 @@ type Props = {
   durationMs: number
   onLongPress: () => void
   onPressOut: () => void
+  /** Dark bg üstünde ise state text ve hint beyaz görünür */
+  onDark?: boolean
 }
 
-export default function MicButton({ state, durationMs, onLongPress, onPressOut }: Props) {
+export default function MicButton({ state, durationMs, onLongPress, onPressOut, onDark = true }: Props) {
   const pulseAnim = useRef(new Animated.Value(1)).current
   const glowAnim = useRef(new Animated.Value(0.3)).current
 
@@ -28,30 +31,14 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut }
     if (state === 'recording') {
       const pulseLoop = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.15,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
+          Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         ])
       )
       const glowLoop = Animated.loop(
         Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 0.6,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0.2,
-            duration: 800,
-            useNativeDriver: true,
-          }),
+          Animated.timing(glowAnim, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0.25, duration: 800, useNativeDriver: true }),
         ])
       )
       pulseLoop.start()
@@ -59,7 +46,7 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut }
       return () => { pulseLoop.stop(); glowLoop.stop() }
     } else {
       pulseAnim.setValue(1)
-      glowAnim.setValue(0.3)
+      glowAnim.setValue(0.35)
     }
   }, [state, pulseAnim, glowAnim])
 
@@ -73,10 +60,17 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut }
   const isRecording = state === 'recording'
   const isProcessing = state === 'processing'
 
+  const gradientColors = isRecording
+    ? gradients.micRecording
+    : gradients.mic
+
+  const stateTextColor = onDark ? colors.textOnDark : colors.text
+  const hintColor = onDark ? colors.textOnDarkMuted : colors.textMuted
+
   return (
     <View style={styles.container}>
       {/* Durum metni */}
-      <Text style={[styles.stateText, isRecording && styles.stateTextRecording]}>
+      <Text style={[styles.stateText, { color: stateTextColor }, isRecording && styles.stateTextRecording]}>
         {isRecording
           ? 'Dinliyorum...'
           : isProcessing
@@ -90,10 +84,10 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut }
       )}
 
       {isProcessing && (
-        <Text style={styles.processingDots}>●  ●  ●</Text>
+        <Text style={[styles.processingDots, { color: hintColor }]}>●  ●  ●</Text>
       )}
 
-      {/* Glow ring */}
+      {/* Glow ring — gradient'in ışıltısı */}
       <Animated.View
         style={[
           styles.glowRing,
@@ -105,37 +99,38 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut }
         ]}
       />
 
-      {/* Buton */}
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+      {/* Buton — gradient sunset */}
+      <Animated.View style={[styles.buttonWrap, { transform: [{ scale: pulseAnim }] }]}>
         <Pressable
           onLongPress={onLongPress}
           onPressOut={onPressOut}
           delayLongPress={300}
           disabled={isProcessing}
           style={({ pressed }) => [
-            styles.button,
-            isRecording && styles.buttonRecording,
-            isProcessing && styles.buttonProcessing,
+            styles.buttonBase,
             pressed && !isRecording && !isProcessing && styles.buttonPressed,
           ]}
         >
-          <View style={[
-            styles.buttonInner,
-            isRecording && styles.buttonInnerRecording,
-            isProcessing && styles.buttonInnerProcessing,
-          ]}>
-            <Ionicons
-              name={isRecording ? 'mic' : isProcessing ? 'hourglass-outline' : 'mic-outline'}
-              size={36}
-              color={colors.textInverse}
-            />
-          </View>
+          <LinearGradient
+            colors={gradientColors as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+          >
+            <View style={styles.ringInner}>
+              <Ionicons
+                name={isRecording ? 'mic' : isProcessing ? 'hourglass-outline' : 'mic'}
+                size={36}
+                color={colors.white}
+              />
+            </View>
+          </LinearGradient>
         </Pressable>
       </Animated.View>
 
       {/* İpucu */}
       {!isRecording && !isProcessing && (
-        <Text style={styles.hint}>En az 1 saniye kayıt yapın</Text>
+        <Text style={[styles.hint, { color: hintColor }]}>En az 1 saniye kayıt yapın</Text>
       )}
     </View>
   )
@@ -149,69 +144,59 @@ const styles = StyleSheet.create({
   stateText: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
-    color: colors.text,
     letterSpacing: -0.3,
   },
   stateTextRecording: {
-    color: colors.danger,
+    color: '#FF6A88',
   },
   duration: {
     fontSize: 36,
     fontWeight: fontWeight.heavy,
-    color: colors.danger,
+    color: '#FF6A88',
     fontVariant: ['tabular-nums'],
     letterSpacing: 1,
   },
   processingDots: {
     fontSize: fontSize.xl,
-    color: colors.textMuted,
     letterSpacing: 4,
   },
   glowRing: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     top: '50%',
-    marginTop: -10,
+    marginTop: -15,
   },
-  button: {
+  buttonWrap: {
+    ...shadow.glow('#7B61FF'),
+  },
+  buttonBase: {
     width: 96,
     height: 96,
     borderRadius: 48,
+  },
+  gradient: {
+    flex: 1,
+    borderRadius: 48,
     padding: 3,
-    backgroundColor: colors.primary,
-    ...shadow.glow(colors.primary),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  buttonRecording: {
-    backgroundColor: colors.danger,
-    ...shadow.glow(colors.danger),
-  },
-  buttonProcessing: {
-    backgroundColor: colors.textMuted,
-    ...shadow.glow(colors.textMuted),
+  ringInner: {
+    flex: 1,
+    alignSelf: 'stretch',
+    borderRadius: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   buttonPressed: {
     transform: [{ scale: 0.95 }],
   },
-  buttonInner: {
-    flex: 1,
-    borderRadius: 45,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  buttonInnerRecording: {
-    backgroundColor: colors.danger,
-  },
-  buttonInnerProcessing: {
-    backgroundColor: colors.textMuted,
-  },
   hint: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
     letterSpacing: -0.2,
   },
 })

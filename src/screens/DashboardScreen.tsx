@@ -373,7 +373,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: 180, // FAB ve alt tab için alan
+    paddingTop: spacing.xl,
+    paddingBottom: 200, // FAB ve alt tab için alan
   },
   // Header
   header: {
@@ -385,22 +386,24 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: fontSize.xxl,
     fontWeight: fontWeight.bold,
-    color: colors.text,
+    color: colors.textOnDark,
     letterSpacing: -0.5,
   },
   subGreeting: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
-    marginTop: 2,
+    color: colors.textOnDarkMuted,
+    marginTop: 4,
   },
   streakPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.accentLight,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   streakText: {
     fontSize: fontSize.xs,
@@ -414,13 +417,13 @@ const styles = StyleSheet.create({
   metricRow: {
     flexDirection: 'row',
   },
-  // Kart
+  // Kart — dark bg üstünde "yüzen" beyaz kart
   card: {
     backgroundColor: colors.bgCard,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    ...shadow.sm,
+    ...shadow.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -574,10 +577,10 @@ const styles = StyleSheet.create({
   // Empty card
   emptyCard: {
     backgroundColor: colors.bgCard,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.xxl,
     alignItems: 'center',
-    ...shadow.sm,
+    ...shadow.card,
   },
   emptyIcon: {
     width: 56,
@@ -600,10 +603,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  // FAB
+  // FAB — tab bar üstünde floating mic
   fab: {
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.lg,
+    bottom: spacing.lg + 70, // tab bar yüksekliği kadar yukarı
   },
 })

@@ -13,12 +13,13 @@ import {
   Platform,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
 import { useContactStore } from '../stores/contactStore'
 import { dialog } from './AppDialog'
-import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
+import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients } from '../utils/theme'
 import type { ContactsStackParamList } from '../navigation/types'
 
 type FormNav = NativeStackNavigationProp<ContactsStackParamList, 'ContactForm'>
@@ -150,15 +151,22 @@ export default function ContactFormScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          style={[styles.saveWrap, saving && { opacity: 0.6 }]}
           onPress={handleSave}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           disabled={saving}
         >
-          <Ionicons name={editId ? 'checkmark-circle' : 'add-circle'} size={20} color={colors.textInverse} />
-          <Text style={styles.saveButtonText}>
-            {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
-          </Text>
+          <LinearGradient
+            colors={gradients.mic as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.saveButton}
+          >
+            <Ionicons name={editId ? 'checkmark-circle' : 'add-circle'} size={20} color={colors.white} />
+            <Text style={styles.saveButtonText}>
+              {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -175,10 +183,10 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.xl,
     padding: spacing.lg,
-    ...shadow.sm,
+    ...shadow.card,
   },
   fieldGroup: {
     marginBottom: spacing.lg,
@@ -195,8 +203,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   input: {
-    backgroundColor: colors.borderLight,
-    borderRadius: radius.sm,
+    backgroundColor: '#F7F8FB',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: fontSize.md,
@@ -206,20 +216,23 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingTop: spacing.md,
   },
+  saveWrap: {
+    borderRadius: radius.lg,
+    marginTop: spacing.xxl,
+    ...shadow.glow('#7B61FF'),
+  },
   saveButton: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
     borderRadius: radius.lg,
     paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xxl,
     gap: spacing.sm,
-    ...shadow.glow(colors.primary),
   },
   saveButtonText: {
-    color: colors.textInverse,
+    color: colors.white,
     fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.2,
   },
 })

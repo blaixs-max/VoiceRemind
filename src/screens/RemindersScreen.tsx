@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
 import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
@@ -37,6 +38,7 @@ const FILTER_ORDER: FilterMode[] = ['pending', 'done', 'all', 'today', 'importan
 
 export default function RemindersScreen() {
   const navigation = useNavigation<Nav>()
+  const insets = useSafeAreaInsets()
   const reminders = useReminderStore((s) => s.reminders)
   const markDone = useReminderStore((s) => s.markDone)
   const markPending = useReminderStore((s) => s.markPending)
@@ -252,7 +254,7 @@ export default function RemindersScreen() {
   return (
     <View style={styles.container}>
       {/* Segment control — 5 filtre, tek satırda eşit bölünmüş (iOS segment control tarzı) */}
-      <View style={styles.filterBar}>
+      <View style={[styles.filterBar, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.segmentRow}>
           {FILTER_ORDER.map((mode) => {
             const active = filter === mode
@@ -268,7 +270,7 @@ export default function RemindersScreen() {
                   <Ionicons
                     name={active ? 'flag' : 'flag-outline'}
                     size={11}
-                    color={active ? colors.warning : colors.textMuted}
+                    color={active ? colors.white : colors.textOnDarkMuted}
                   />
                 )}
                 <Text
@@ -334,9 +336,9 @@ export default function RemindersScreen() {
             <Ionicons
               name="funnel-outline"
               size={14}
-              color={contactFilter ? colors.primary : colors.textMuted}
+              color={contactFilter ? colors.primaryLight : colors.textOnDarkMuted}
             />
-            <Text style={[styles.filterChipText, contactFilter && { color: colors.primary }]}>
+            <Text style={[styles.filterChipText, contactFilter && { color: colors.primaryLight, fontWeight: fontWeight.semibold }]}>
               {contactFilter ? getContact(contactFilter)?.company ?? 'Filtre' : 'Cari'}
             </Text>
           </TouchableOpacity>
@@ -392,19 +394,22 @@ function fmtDateKey(d: Date): string {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   filterBar: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.bgSecondary,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
     gap: spacing.sm,
   },
   segmentRow: {
     flexDirection: 'row',
-    backgroundColor: colors.borderLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: radius.sm,
-    padding: 2,
+    padding: 3,
     gap: 2,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   segment: {
     flex: 1,
@@ -417,33 +422,34 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   segmentActive: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.primary,
     ...shadow.sm,
   },
   segmentText: {
     fontSize: fontSize.xs,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
     fontWeight: fontWeight.medium,
   },
   segmentTextActive: {
-    color: colors.primary,
-    fontWeight: fontWeight.semibold,
+    color: colors.white,
+    fontWeight: fontWeight.bold,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.borderLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   searchInput: {
     flex: 1,
     fontSize: fontSize.sm,
-    color: colors.text,
+    color: colors.textOnDark,
     paddingVertical: 4,
-    // Android'de TextInput default olarak kendi padding'ini ekler; sıfırla
     paddingTop: 4,
     paddingBottom: 4,
   },
@@ -455,24 +461,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.full,
-    backgroundColor: colors.borderLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   filterChipActive: {
-    backgroundColor: colors.primaryBg,
+    backgroundColor: 'rgba(99, 102, 241, 0.22)',
+    borderColor: colors.primary,
   },
   filterChipText: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
     fontWeight: fontWeight.medium,
   },
-  listContent: { paddingBottom: 40 },
+  listContent: { paddingBottom: 140 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: colors.bg,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   sectionLeft: {
     flexDirection: 'row',
@@ -482,18 +492,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.md,
     fontWeight: fontWeight.bold,
-    color: colors.text,
+    color: colors.textOnDark,
+    letterSpacing: -0.2,
   },
   sectionBadge: {
-    backgroundColor: colors.primaryBg,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(99, 102, 241, 0.22)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.35)',
   },
   sectionCount: {
     fontSize: fontSize.xs,
-    fontWeight: fontWeight.semibold,
-    color: colors.primary,
+    fontWeight: fontWeight.bold,
+    color: colors.primaryLight,
   },
   card: {
     flexDirection: 'row',
@@ -501,7 +514,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     gap: spacing.md,
   },
-  cardDone: { opacity: 0.45 },
+  cardDone: { opacity: 0.5 },
   timeline: {
     alignItems: 'center',
     width: 20,
@@ -523,9 +536,9 @@ const styles = StyleSheet.create({
   cardBody: {
     flex: 1,
     backgroundColor: colors.white,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.md,
-    ...shadow.sm,
+    ...shadow.card,
   },
   cardTop: {
     flexDirection: 'row',
@@ -579,24 +592,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
   emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.borderLight,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   emptyText: {
     fontSize: fontSize.md,
-    fontWeight: fontWeight.medium,
-    color: colors.textSecondary,
+    fontWeight: fontWeight.semibold,
+    color: colors.textOnDark,
   },
   emptyHint: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
   },
   cardBodyImportant: {
     borderLeftWidth: 3,

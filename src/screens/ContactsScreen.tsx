@@ -13,15 +13,18 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useContactStore } from '../stores/contactStore'
 import { dialog } from '../components/AppDialog'
-import { colors, fontSize, fontWeight, spacing, radius, shadow, getAvatarColor } from '../utils/theme'
+import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients, getAvatarColor } from '../utils/theme'
 import type { Contact } from '../models/types'
 import type { ContactsStackParamList } from '../navigation/types'
 
 type Nav = NativeStackNavigationProp<ContactsStackParamList, 'ContactList'>
 
 export default function ContactsScreen() {
+  const insets = useSafeAreaInsets()
   const [search, setSearch] = useState('')
   const contacts = useContactStore((s) => s.contacts)
   const deleteContact = useContactStore((s) => s.deleteContact)
@@ -73,20 +76,20 @@ export default function ContactsScreen() {
   return (
     <View style={styles.container}>
       {/* Arama */}
-      <View style={styles.searchWrapper}>
+      <View style={[styles.searchWrapper, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={18} color={colors.textMuted} />
+          <Ionicons name="search" size={18} color={colors.textOnDarkMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Firma veya yetkili ara..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.textOnDarkMuted}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              <Ionicons name="close-circle" size={18} color={colors.textOnDarkMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -102,9 +105,14 @@ export default function ContactsScreen() {
       {/* Liste */}
       {filtered.length === 0 ? (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="people-outline" size={32} color={colors.textMuted} />
-          </View>
+          <LinearGradient
+            colors={gradients.mic as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.emptyIconGradient}
+          >
+            <Ionicons name="people-outline" size={36} color={colors.white} />
+          </LinearGradient>
           <Text style={styles.emptyText}>
             {contacts.length === 0 ? 'Henüz cari eklenmemiş' : 'Sonuç bulunamadı'}
           </Text>
@@ -122,13 +130,20 @@ export default function ContactsScreen() {
         />
       )}
 
-      {/* FAB */}
+      {/* FAB — gradient sunset */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('ContactForm', {})}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
-        <Ionicons name="add" size={28} color={colors.textInverse} />
+        <LinearGradient
+          colors={gradients.mic as unknown as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabGradient}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   )
@@ -140,37 +155,42 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   searchWrapper: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.bgSecondary,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.borderLight,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    height: 42,
+    height: 44,
     gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
   },
   searchInput: {
     flex: 1,
     fontSize: fontSize.md,
-    color: colors.text,
+    color: colors.textOnDark,
   },
   countRow: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   countLabel: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
     fontWeight: fontWeight.medium,
   },
   list: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 140,
   },
   card: {
     flexDirection: 'row',
@@ -180,7 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     marginBottom: spacing.sm,
     gap: spacing.md,
-    ...shadow.sm,
+    ...shadow.card,
   },
   avatar: {
     width: 44,
@@ -213,35 +233,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.borderLight,
+  emptyIconGradient: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.lg,
+    ...shadow.glow('#7B61FF'),
   },
   emptyText: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.medium,
-    color: colors.textSecondary,
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnDark,
   },
   emptyHint: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
+    bottom: 92, // tab bar üstünde
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    ...shadow.glow('#7B61FF'),
+  },
+  fabGradient: {
+    flex: 1,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadow.glow(colors.primary),
   },
 })

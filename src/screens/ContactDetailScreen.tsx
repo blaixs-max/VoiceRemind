@@ -118,8 +118,8 @@ export default function ContactDetailScreen() {
         <View style={styles.actions}>
           {actions.map((a, i) => (
             <TouchableOpacity key={i} style={styles.actionBtn} onPress={a.onPress}>
-              <View style={[styles.actionIcon, { backgroundColor: a.color + '15' }]}>
-                <Ionicons name={a.icon} size={20} color={a.color} />
+              <View style={[styles.actionIcon, { backgroundColor: a.color + '2A', borderColor: a.color + '55' }]}>
+                <Ionicons name={a.icon} size={22} color={a.color} />
               </View>
               <Text style={[styles.actionLabel, { color: a.color }]}>{a.label}</Text>
             </TouchableOpacity>
@@ -203,17 +203,19 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     alignItems: 'center',
-    backgroundColor: colors.white,
-    paddingVertical: spacing.xxl,
-    marginBottom: spacing.sm,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
+    marginBottom: spacing.lg,
   },
   avatarLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   avatarLargeText: {
     color: colors.textInverse,
@@ -223,12 +225,12 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: fontSize.xxl,
     fontWeight: fontWeight.bold,
-    color: colors.text,
+    color: colors.textOnDark,
     letterSpacing: -0.5,
   },
   contactName: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
+    color: colors.textOnDarkSecondary,
     marginTop: 4,
   },
   actions: {
@@ -241,23 +243,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   actionLabel: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
   },
   detailCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.bgCard,
     marginHorizontal: spacing.lg,
     borderRadius: radius.lg,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    ...shadow.sm,
+    ...shadow.card,
   },
   detailRow: {
     flexDirection: 'row',
@@ -265,7 +269,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.borderOnCard,
   },
   detailLabel: {
     fontSize: fontSize.xs,
@@ -292,29 +296,31 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: colors.text,
+    color: colors.textOnDark,
   },
   countBadge: {
-    backgroundColor: colors.primaryBg,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    backgroundColor: 'rgba(99, 102, 241, 0.22)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.35)',
   },
   countText: {
     fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.primary,
+    fontWeight: fontWeight.bold,
+    color: colors.primaryLight,
   },
   reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.bgCard,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     gap: spacing.md,
-    ...shadow.sm,
+    ...shadow.card,
   },
   reminderDone: {
     opacity: 0.5,
@@ -338,8 +344,9 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.sm,
-    color: colors.textMuted,
+    color: colors.textOnDarkMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
   },
 })

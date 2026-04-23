@@ -14,11 +14,14 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuthStore } from '../stores/authStore'
 import { dialog } from '../components/AppDialog'
-import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
+import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients } from '../utils/theme'
 
 export default function AuthScreen() {
+  const insets = useSafeAreaInsets()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -75,16 +78,21 @@ export default function AuthScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xxl }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Logo */}
         <View style={styles.logoArea}>
-          <View style={styles.logoCircle}>
+          <LinearGradient
+            colors={gradients.mic as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoCircle}
+          >
             <Ionicons name="mic" size={36} color={colors.white} />
-          </View>
-          <Text style={styles.appName}>VoiceRemind</Text>
+          </LinearGradient>
+          <Text style={styles.appName}>Voicely AI</Text>
           <Text style={styles.tagline}>Sesli hatırlatıcı asistanınız</Text>
         </View>
 
@@ -137,27 +145,34 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Submit */}
+          {/* Submit — gradient sunset */}
           <TouchableOpacity
-            style={[styles.submitBtn, loading && styles.submitDisabled]}
+            style={[styles.submitWrap, loading && styles.submitDisabled]}
             onPress={handleSubmit}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            {loading ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <>
-                <Ionicons
-                  name={isLogin ? 'log-in-outline' : 'person-add-outline'}
-                  size={20}
-                  color={colors.white}
-                />
-                <Text style={styles.submitText}>
-                  {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
-                </Text>
-              </>
-            )}
+            <LinearGradient
+              colors={gradients.mic as unknown as [string, string, ...string[]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitBtn}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.white} />
+              ) : (
+                <>
+                  <Ionicons
+                    name={isLogin ? 'log-in-outline' : 'person-add-outline'}
+                    size={20}
+                    color={colors.white}
+                  />
+                  <Text style={styles.submitText}>
+                    {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+                  </Text>
+                </>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
@@ -202,31 +217,30 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxxl,
   },
   logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primary,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    ...shadow.glow(colors.primary),
+    marginBottom: spacing.lg,
+    ...shadow.glow('#7B61FF'),
   },
   appName: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    letterSpacing: -0.5,
+    fontSize: fontSize.xxxl,
+    fontWeight: fontWeight.heavy,
+    color: colors.textOnDark,
+    letterSpacing: -0.8,
   },
   tagline: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
-    marginTop: 4,
+    color: colors.textOnDarkSecondary,
+    marginTop: 6,
   },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.xxl,
     padding: spacing.xxl,
-    ...shadow.md,
+    ...shadow.lg,
   },
   cardTitle: {
     fontSize: fontSize.xl,
@@ -238,10 +252,12 @@ const styles = StyleSheet.create({
   inputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.borderLight,
+    backgroundColor: '#F7F8FB',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     borderRadius: radius.md,
     marginBottom: spacing.md,
-    height: 50,
+    height: 52,
   },
   inputIcon: {
     width: 44,
@@ -256,20 +272,22 @@ const styles = StyleSheet.create({
   },
   eyeBtn: {
     width: 44,
-    height: 50,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  submitWrap: {
+    borderRadius: radius.lg,
+    marginTop: spacing.lg,
+    ...shadow.glow('#7B61FF'),
+  },
   submitBtn: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
     borderRadius: radius.lg,
-    height: 52,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.md,
     gap: spacing.sm,
-    ...shadow.glow(colors.primary),
   },
   submitDisabled: {
     opacity: 0.7,
@@ -277,7 +295,8 @@ const styles = StyleSheet.create({
   submitText: {
     color: colors.white,
     fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.2,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -286,11 +305,11 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
+    color: colors.textOnDarkSecondary,
   },
   toggleLink: {
     fontSize: fontSize.md,
-    color: colors.primary,
-    fontWeight: fontWeight.semibold,
+    color: colors.primaryLight,
+    fontWeight: fontWeight.bold,
   },
 })

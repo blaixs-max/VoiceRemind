@@ -2,9 +2,11 @@
 
 import React, { useEffect } from 'react'
 import { View, ActivityIndicator, StyleSheet } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
 import * as Notifications from 'expo-notifications'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -38,6 +40,15 @@ const Tab = createBottomTabNavigator()
 const ContactsStack = createNativeStackNavigator<ContactsStackParamList>()
 const RemindersStack = createNativeStackNavigator<RemindersStackParamList>()
 
+// Dark tema için ortak stack header stili
+const darkStackHeader = {
+  headerStyle: { backgroundColor: colors.bgSecondary },
+  headerTintColor: colors.textOnDark,
+  headerTitleStyle: { fontWeight: fontWeight.bold, color: colors.textOnDark },
+  headerShadowVisible: false,
+  contentStyle: { backgroundColor: colors.bg },
+}
+
 // Hatırlatıcılar tab'ı içindeki stack navigator
 function RemindersStackScreen() {
   return (
@@ -52,10 +63,7 @@ function RemindersStackScreen() {
         component={ReminderEditScreen}
         options={{
           title: 'Hatırlatıcıyı Düzenle',
-          headerStyle: { backgroundColor: colors.bg },
-          headerTintColor: colors.primary,
-          headerTitleStyle: { fontWeight: fontWeight.bold, color: colors.text },
-          headerShadowVisible: false,
+          ...darkStackHeader,
         }}
       />
     </RemindersStack.Navigator>
@@ -76,10 +84,7 @@ function ContactsStackScreen() {
         component={ContactDetailScreen}
         options={{
           title: 'Cari Detay',
-          headerStyle: { backgroundColor: colors.bg },
-          headerTintColor: colors.primary,
-          headerTitleStyle: { fontWeight: fontWeight.bold, color: colors.text },
-          headerShadowVisible: false,
+          ...darkStackHeader,
         }}
       />
       <ContactsStack.Screen
@@ -87,10 +92,7 @@ function ContactsStackScreen() {
         component={ContactFormScreen}
         options={{
           title: 'Yeni Cari',
-          headerStyle: { backgroundColor: colors.bg },
-          headerTintColor: colors.primary,
-          headerTitleStyle: { fontWeight: fontWeight.bold, color: colors.text },
-          headerShadowVisible: false,
+          ...darkStackHeader,
         }}
       />
     </ContactsStack.Navigator>
@@ -123,29 +125,41 @@ function MainApp() {
           else if (route.name === 'Cariler') iconName = 'people-outline'
           return <Ionicons name={iconName} size={size} color={color} />
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.primaryLight,
+        tabBarInactiveTintColor: colors.textOnDarkMuted,
         tabBarStyle: {
-          backgroundColor: colors.white,
+          backgroundColor: colors.bgSecondary,
           borderTopColor: colors.border,
-          elevation: 8,
-          shadowOpacity: 0.06,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: 66,
+          paddingTop: 6,
+          paddingBottom: 10,
+          elevation: 18,
+          shadowColor: '#000',
+          shadowOpacity: 0.35,
+          shadowOffset: { width: 0, height: -4 },
+          shadowRadius: 12,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: fontWeight.semibold,
+          letterSpacing: -0.1,
         },
         headerStyle: {
-          backgroundColor: colors.bg,
+          backgroundColor: colors.bgSecondary,
         },
         headerTitleStyle: {
           fontWeight: fontWeight.bold,
-          color: colors.text,
+          color: colors.textOnDark,
         },
-        headerTintColor: colors.primary,
+        headerTintColor: colors.primaryLight,
         headerShadowVisible: false,
         headerShown: true,
         headerRight: () => (
           <Ionicons
             name="log-out-outline"
             size={22}
-            color={colors.textMuted}
+            color={colors.textOnDarkMuted}
             style={{ marginRight: 16 }}
             onPress={signOut}
           />
@@ -167,6 +181,19 @@ function MainApp() {
   )
 }
 
+// NavigationContainer için dark bg teması — screen geçişlerinde beyaz flash olmaz
+const navTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.bg,
+    card: colors.bgSecondary,
+    text: colors.textOnDark,
+    border: colors.border,
+    primary: colors.primaryLight,
+  },
+}
+
 export default function App() {
   const initialize = useAuthStore((s) => s.initialize)
   const initialized = useAuthStore((s) => s.initialized)
@@ -179,21 +206,28 @@ export default function App() {
   // Session kontrol ediliyor — loading göster
   if (!initialized) {
     return (
-      <View style={styles.splash}>
-        <Ionicons name="mic" size={48} color={colors.primary} />
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-      </View>
+      <SafeAreaProvider>
+        <StatusBar style="light" translucent backgroundColor="transparent" />
+        <View style={styles.splash}>
+          <Ionicons name="mic" size={48} color={colors.primaryLight} />
+          <ActivityIndicator size="large" color={colors.primaryLight} style={{ marginTop: 20 }} />
+        </View>
+      </SafeAreaProvider>
     )
   }
 
   return (
-    <ErrorBoundary>
-      <NavigationContainer>
-        {session ? <MainApp /> : <AuthScreen />}
-      </NavigationContainer>
-      {/* Tüm uygulama için tek merkezi dialog host — Alert.alert/ActionSheetIOS yerine */}
-      <DialogHost />
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      {/* Dark bg üstünde beyaz icon'lar — translucent + transparent arka plan */}
+      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <ErrorBoundary>
+        <NavigationContainer theme={navTheme}>
+          {session ? <MainApp /> : <AuthScreen />}
+        </NavigationContainer>
+        {/* Tüm uygulama için tek merkezi dialog host — Alert.alert/ActionSheetIOS yerine */}
+        <DialogHost />
+      </ErrorBoundary>
+    </SafeAreaProvider>
   )
 }
 

@@ -242,8 +242,8 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] Data Safety referans dokümanı (docs/data-safety.md)
 - [x] Store listing copy TR + EN (docs/store-listing.md)
 - [ ] **ŞİMDİ:** Play Console'da app oluştur (`docs/play-runbook.md` Faz 1)
-- [ ] **ŞİMDİ:** `app.json` → `android.versionCode: 3` güncelle (eski build 2 kullanıldı)
 - [ ] Service account JSON üret + `secrets/google-play-service-account.json` konumuna koy
+- [x] versionCode yönetimi — EAS `appVersionSource: remote` + `autoIncrement: true` otomatik halleder (manuel güncelleme yok)
 - [ ] Production build (AAB): `eas build --platform android --profile production`
 - [ ] Internal track upload: `eas submit --platform android --latest`
 - [ ] Store listing + Data Safety + Content Rating + Target Audience doldur

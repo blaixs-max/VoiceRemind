@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -20,7 +21,7 @@ import type { RouteProp } from '@react-navigation/native'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
 import { dialog } from '../components/AppDialog'
-import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
+import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients } from '../utils/theme'
 import type { RemindersStackParamList } from '../navigation/types'
 
 type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderEdit'>
@@ -285,15 +286,22 @@ export default function ReminderEditScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          style={[styles.saveWrap, saving && { opacity: 0.6 }]}
           onPress={handleSave}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           disabled={saving}
         >
-          <Ionicons name="checkmark-circle" size={20} color={colors.textInverse} />
-          <Text style={styles.saveButtonText}>
-            {saving ? 'Kaydediliyor...' : 'Güncelle'}
-          </Text>
+          <LinearGradient
+            colors={gradients.mic as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.saveButton}
+          >
+            <Ionicons name="checkmark-circle" size={20} color={colors.white} />
+            <Text style={styles.saveButtonText}>
+              {saving ? 'Kaydediliyor...' : 'Güncelle'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -314,10 +322,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: spacing.lg, paddingBottom: 40 },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.xl,
     padding: spacing.lg,
-    ...shadow.sm,
+    ...shadow.card,
   },
   fieldGroup: { marginBottom: spacing.lg },
   labelRow: {
@@ -332,16 +340,20 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   input: {
-    backgroundColor: colors.borderLight,
-    borderRadius: radius.sm,
+    backgroundColor: '#F7F8FB',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: fontSize.md,
     color: colors.text,
   },
   pickerInput: {
-    backgroundColor: colors.borderLight,
-    borderRadius: radius.sm,
+    backgroundColor: '#F7F8FB',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     flexDirection: 'row',
@@ -354,21 +366,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pickerPlaceholder: { color: colors.textMuted },
+  saveWrap: {
+    borderRadius: radius.lg,
+    marginTop: spacing.xxl,
+    ...shadow.glow('#7B61FF'),
+  },
   saveButton: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
     borderRadius: radius.lg,
     paddingVertical: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xxl,
     gap: spacing.sm,
-    ...shadow.glow(colors.primary),
   },
   saveButtonText: {
-    color: colors.textInverse,
+    color: colors.white,
     fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.2,
   },
   deleteButton: {
     flexDirection: 'row',
