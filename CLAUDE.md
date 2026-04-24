@@ -24,7 +24,7 @@ iOS/Android sesli hatirlatici uygulamasi. Kullanici mikrofona basili tutar, konu
 | Auth | Supabase Auth (email/password) |
 | STT | OpenAI Whisper API |
 | NLP | GPT-4.1-mini (function calling) |
-| Tasarim | Custom design system (indigo palette) |
+| Tasarim | Custom design system (dark navy + purple→orange sunset gradient) |
 | Build | EAS Build (Android APK hazır, iOS TestFlight bekliyor) |
 
 ## Proje Yapisi
@@ -36,7 +36,7 @@ VoiceRemind/
 ├── app.json                         # Expo config + plugins + EAS project ID
 ├── src/
 │   ├── models/types.ts              # Contact, Reminder, ParsedReminder, EdgeFunctionResponse
-│   ├── navigation/types.ts          # ContactsStackParamList
+│   ├── navigation/types.ts          # ContactsStackParamList, RemindersStackParamList
 │   ├── stores/
 │   │   ├── authStore.ts             # Supabase Auth — login, register, logout, session
 │   │   ├── contactStore.ts          # Cloud-first CRUD — Supabase + lokal state
@@ -48,17 +48,20 @@ VoiceRemind/
 │   │   ├── config.ts                # Supabase URL/key, recording config, confidence thresholds
 │   │   ├── api.ts                   # sendAudioForParsing (multipart + auth JWT + apikey)
 │   │   ├── supabase.ts              # Supabase client singleton (AsyncStorage session persist)
-│   │   ├── theme.ts                 # Design system: colors, spacing, radius, fontSize, shadow
+│   │   ├── theme.ts                 # Design system: dark navy palette, gradients, shadow helpers
 │   │   └── turkishDateParser.ts     # Deterministic Turkish date → ISO (göreli + mutlak zaman)
 │   ├── screens/
 │   │   ├── AuthScreen.tsx           # Login/Register — tek ekran, toggle ile geçiş
-│   │   ├── HomeScreen.tsx           # Mic button + bugünün hatırlatıcıları
-│   │   ├── RemindersScreen.tsx      # Timeline + segment filtre + section groups
+│   │   ├── DashboardScreen.tsx      # Executive dashboard (KPI kartları + bugün listesi) — mic FAB tab bar'da
+│   │   ├── RemindersScreen.tsx      # Timeline + segment filtre + section groups (dark tema)
+│   │   ├── ReminderEditScreen.tsx   # Mevcut hatırlatıcıyı düzenleme ekranı
 │   │   ├── ContactsScreen.tsx       # Avatar renkli liste + arama + FAB
 │   │   └── ContactDetailScreen.tsx  # Profil kartı + aksiyon butonları
 │   └── components/
-│       ├── MicButton.tsx            # Gradient ring + glow pulse animasyonu
-│       ├── ConfirmationModal.tsx     # Transcript kutusu + reminder kartları + onay
+│       ├── CustomTabBar.tsx         # Rounded-top tab bar + floating center mic FAB (state lift)
+│       ├── MicButton.tsx            # Gradient sunset + glow pulse (compact mode tab için)
+│       ├── AppDialog.tsx            # Merkezi DialogHost (Alert.alert / ActionSheetIOS yerine)
+│       ├── ConfirmationModal.tsx    # Transcript kutusu + reminder kartları + onay
 │       ├── ReminderCard.tsx         # Editable kart + confidence göstergesi
 │       ├── ConfidenceIndicator.tsx  # Renk kodlu güven badge'i
 │       ├── ContactBadge.tsx         # Yeni/mevcut kişi badge'i
@@ -127,7 +130,9 @@ Store'larda `rowToContact()` / `rowToReminder()` dönüşüm fonksiyonları var.
 - Zustand selector pattern: `useStore((s) => s.field)`
 - Türkçe UI metinleri, İngilizce değişken/fonksiyon adları
 - Theme sistemi: tüm renkler, spacing, font `theme.ts`'den gelir
-- `colors.bg` (#EAEFF8 soft indigo-gray) arka plan, `colors.white/bgCard` kart yüzeyler
+- `colors.bg` (dark navy) arka plan, `colors.bgSecondary` tab bar, `colors.bgCard` kart yüzeyler
+- `colors.textOnDark` ve `colors.textOnDarkMuted` — dark bg üstünde metin kullanımı
+- `gradients.mic` / `gradients.micRecording` — mic button purple→orange sunset
 - Edge Function'da CORS header'lar zorunlu
 - Edge Function deploy: `supabase functions deploy parse-reminder --no-verify-jwt --project-ref dtepkruumsxlflyzfeut`
 - turkishDateParser.ts değiştiğinde MUTLAKA supabase kopyası da güncellenmelidir
@@ -194,6 +199,13 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] **Faz 7** — UI/UX profesyonel tasarım (design system + tüm ekranlar)
 - [x] **Faz 8** — Bulut altyapı (Supabase DB + Auth + RLS + cloud-first store'lar)
 - [x] **Faz 9** — EAS Build (Android APK başarılı)
+- [x] **Faz 10** — Executive Dashboard redesign (2026-04-24/25)
+  - Dark navy tema + premium CRM görünümü (commit `1f403f2`)
+  - Custom bottom tab bar + floating center mic FAB (commit `8aec7f2`)
+  - Tab label'lar bottom-aligned, mic alanıyla çakışma kaldırıldı (commit `b83355b`)
+  - Mic glow fix: 120px centered + pointerEvents="none" + daha transparent (commit `798ccff`)
+  - SafeAreaProvider bg: iOS yuvarlak ekran köşelerinde beyaz sızma kapatıldı
+  - Mic button artık tüm tab'lardan erişilebilir (state CustomTabBar'a lift edildi)
 
 ## Düzeltilen Buglar (bu oturumda)
 
@@ -351,11 +363,9 @@ OPENAI_API_KEY=sk-proj-xxx
 - useParseAudio'da `filterByTranscript` import edilip kullanılmıyor (getSummaries kullanılıyor)
 - Expo Go ile çalıştırma hala dev server gerektiriyor (iPhone için)
 - Free tier Supabase: 500MB DB, 1GB storage, 50K auth users
+- **EAS Build Free quota**: Ayda 30 Android + 15 iOS build. Reset tarihi ayın 1'i (bir sonraki: **2026-05-01**)
+- **Ngrok tunnel (Windows, tester paylaşımı için)**: `@expo/ngrok` bundled binary v2.3.41 deprecated → v3.38.0 ile swap gerekli. Bundled yol: `%APPDATA%\npm\node_modules\@expo\ngrok\node_modules\@expo\ngrok-bin-win32-x64\ngrok.exe`. Ayrıca free hesap için authtoken zorunlu (ERR_NGROK_4018) + minimum agent 3.20+ (ERR_NGROK_121). Alternatif: manuel `ngrok http 8081` başlat, PowerShell'de `$env:REACT_NATIVE_PACKAGER_HOSTNAME`, `$env:EXPO_PACKAGER_PROXY_URL`, `$env:EXPO_MANIFEST_PROXY_URL` set edip `npx expo start --lan` ile çalıştır.
 
 ## Çözülmesi Gereken Sorunlar
 
-- [~] **RemindersScreen — "Bugün" ve "Önemli" filtre segmentleri** (commit `c7016f9` ile yeniden tasarlandı)
-  - İlk deneme (`d43fdaa`): horizontal ScrollView + pill segment tasarımı → kullanıcı onaylamadı
-  - İkinci deneme (`c7016f9`): iOS segment-control tarzı `flex: 1` eşit paylaşım + fontSize.xs + adjustsFontSizeToFit
-  - APK test sonuçları beklemede — kullanıcının geri dönüşüne göre değerlendirilecek
-  - Eğer hâlâ sığmazsa label'lar kısaltılabilir (`Tamamlandı` → `Bitti`)
+> Faz 10 (Executive Dashboard redesign) ile tüm UI yenilendiğinde önceki segment-filter sorunu (commit `c7016f9`) artık geçerli değil — eski RemindersScreen layout'u kaldırıldı. Bu bölüm şu an boş; yeni UI üzerinde ortaya çıkan sorunlar buraya işlenecek.
