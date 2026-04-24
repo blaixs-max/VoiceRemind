@@ -151,8 +151,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgSecondary,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingTop: 12,
-    minHeight: 84,
+    paddingTop: 52, // ÜST kısım floating mic için rezerve — tab butonları alta itilir
     // Gölge — yukarı doğru drop shadow
     shadowColor: '#000',
     shadowOpacity: 0.4,
@@ -163,19 +162,18 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end', // icon + label bar'ın ALT kısmına hizalanır
     gap: 4,
-    paddingTop: 4,
   },
   label: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
     letterSpacing: -0.1,
   },
-  // Mic floating wrapper — tam ortada, buton tab bar'ın üst kenarına oturuyor
+  // Mic floating wrapper — bar'ın üst kenarında, ~%65 yukarıda %35 bar içinde
   micWrap: {
     position: 'absolute',
-    top: -48, // buton (96px) yarısı + biraz boşluk → ~%55 yukarıda, %45 tab bar üstünde
+    top: -60, // daha yukarı taşıdım: buton 96px'in ~%63'ü bar dışında kalır
     left: 0,
     right: 0,
     alignItems: 'center',
