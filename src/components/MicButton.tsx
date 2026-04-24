@@ -39,16 +39,18 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut, 
       )
       const glowLoop = Animated.loop(
         Animated.sequence([
-          Animated.timing(glowAnim, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0.25, duration: 800, useNativeDriver: true }),
+          // Recording pulse: 0.45 → 0.15 (daha yumuşak, daha transparent)
+          Animated.timing(glowAnim, { toValue: 0.45, duration: 800, useNativeDriver: true }),
+          Animated.timing(glowAnim, { toValue: 0.15, duration: 800, useNativeDriver: true }),
         ])
       )
       pulseLoop.start()
       glowLoop.start()
       return () => { pulseLoop.stop(); glowLoop.stop() }
     } else {
+      // Idle glow: 0.35 → 0.2 (dinlenmiyorken daha az dikkat çeker)
       pulseAnim.setValue(1)
-      glowAnim.setValue(0.35)
+      glowAnim.setValue(0.2)
     }
   }, [state, pulseAnim, glowAnim])
 
@@ -96,8 +98,9 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut, 
         <Text style={[styles.processingDots, { color: hintColor }]}>●  ●  ●</Text>
       )}
 
-      {/* Glow ring — gradient'in ışıltısı */}
+      {/* Glow ring — gradient'in ışıltısı — pointerEvents=none: altındaki tab button'larını bloklama */}
       <Animated.View
+        pointerEvents="none"
         style={[
           styles.glowRing,
           {
@@ -189,12 +192,14 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   glowRing: {
+    // Button 96x96, glow 120x120 → her kenardan 12px taşar (simetrik halka).
+    // top/left: -12 ile button'un tam merkezine oturur, alt tab alanına sarkmaz.
     position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    top: '50%',
-    marginTop: -15,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    top: -12,
+    left: -12,
   },
   buttonWrap: {
     ...shadow.glow('#7B61FF'),

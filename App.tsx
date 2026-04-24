@@ -182,7 +182,7 @@ export default function App() {
   // Session kontrol ediliyor — loading göster
   if (!initialized) {
     return (
-      <SafeAreaProvider>
+      <SafeAreaProvider style={styles.rootBg}>
         <StatusBar style="light" translucent backgroundColor="transparent" />
         <View style={styles.splash}>
           <Ionicons name="mic" size={48} color={colors.primaryLight} />
@@ -193,7 +193,8 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
+    // rootBg: iOS ekran yuvarlak köşelerinde beyaz sızmasını önler — tab bar rengiyle uyumlu
+    <SafeAreaProvider style={styles.rootBg}>
       {/* Dark bg üstünde beyaz icon'lar — translucent + transparent arka plan */}
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <ErrorBoundary>
@@ -213,5 +214,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.bg,
+  },
+  // Root SafeAreaProvider bg — iOS ekran yuvarlak köşelerinde beyaz sızma olmasın
+  // Tab bar'ın rengiyle aynı (bgSecondary), böylece bottom corner'larda tutarsızlık olmaz
+  rootBg: {
+    flex: 1,
+    backgroundColor: colors.bgSecondary,
   },
 })

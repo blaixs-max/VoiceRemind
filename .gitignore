@@ -48,3 +48,6 @@ supabase/.temp/
 secrets/
 google-play-service-account.json
 AuthKey_*.p8
+
+# Ephemeral tester sharing QR codes (regenerated per tunnel session)
+tester-qr.png
