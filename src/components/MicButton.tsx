@@ -21,9 +21,11 @@ type Props = {
   onPressOut: () => void
   /** Dark bg üstünde ise state text ve hint beyaz görünür */
   onDark?: boolean
+  /** Tab bar slot'u için kompakt mod — state text ve hint gizli, sadece buton + glow */
+  compact?: boolean
 }
 
-export default function MicButton({ state, durationMs, onLongPress, onPressOut, onDark = true }: Props) {
+export default function MicButton({ state, durationMs, onLongPress, onPressOut, onDark = true, compact = false }: Props) {
   const pulseAnim = useRef(new Animated.Value(1)).current
   const glowAnim = useRef(new Animated.Value(0.3)).current
 
@@ -68,22 +70,29 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut, 
   const hintColor = onDark ? colors.textOnDarkMuted : colors.textMuted
 
   return (
-    <View style={styles.container}>
-      {/* Durum metni */}
-      <Text style={[styles.stateText, { color: stateTextColor }, isRecording && styles.stateTextRecording]}>
-        {isRecording
-          ? 'Dinliyorum...'
-          : isProcessing
-          ? 'İşleniyor...'
-          : 'Basılı tut ve konuş'}
-      </Text>
-
-      {/* Süre */}
-      {isRecording && (
-        <Text style={styles.duration}>{formatDuration(durationMs)}</Text>
+    <View style={[styles.container, compact && styles.containerCompact]}>
+      {/* Durum metni — compact modda gizli */}
+      {!compact && (
+        <Text style={[styles.stateText, { color: stateTextColor }, isRecording && styles.stateTextRecording]}>
+          {isRecording
+            ? 'Dinliyorum...'
+            : isProcessing
+            ? 'İşleniyor...'
+            : 'Basılı tut ve konuş'}
+        </Text>
       )}
 
-      {isProcessing && (
+      {/* Süre — compact modda küçük badge olarak gösterilir */}
+      {isRecording && !compact && (
+        <Text style={styles.duration}>{formatDuration(durationMs)}</Text>
+      )}
+      {isRecording && compact && (
+        <View style={styles.compactDurationPill}>
+          <Text style={styles.compactDurationText}>{formatDuration(durationMs)}</Text>
+        </View>
+      )}
+
+      {isProcessing && !compact && (
         <Text style={[styles.processingDots, { color: hintColor }]}>●  ●  ●</Text>
       )}
 
@@ -128,8 +137,8 @@ export default function MicButton({ state, durationMs, onLongPress, onPressOut, 
         </Pressable>
       </Animated.View>
 
-      {/* İpucu */}
-      {!isRecording && !isProcessing && (
+      {/* İpucu — compact modda gizli */}
+      {!isRecording && !isProcessing && !compact && (
         <Text style={[styles.hint, { color: hintColor }]}>En az 1 saniye kayıt yapın</Text>
       )}
     </View>
@@ -140,6 +149,25 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     gap: 14,
+  },
+  containerCompact: {
+    gap: 0,
+  },
+  compactDurationPill: {
+    position: 'absolute',
+    top: -28,
+    backgroundColor: '#FF6A88',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    zIndex: 10,
+  },
+  compactDurationText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.4,
   },
   stateText: {
     fontSize: fontSize.lg,

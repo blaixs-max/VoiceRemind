@@ -1,5 +1,6 @@
 // src/screens/DashboardScreen.tsx
-// CRM odaklı ana dashboard — metrikler, haftalık bar chart, top cariler, uyuyan cariler + mic FAB
+// CRM odaklı ana dashboard — metrikler, haftalık bar chart, top cariler, uyuyan cariler
+// Mic FAB artık CustomTabBar'da — tüm tab'lardan erişilebilir
 
 import React, { useState, useMemo, useEffect } from 'react'
 import {
@@ -9,11 +10,6 @@ import {
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import MicButton from '../components/MicButton'
-import ConfirmationModal from '../components/ConfirmationModal'
-import { dialog } from '../components/AppDialog'
-import { useRecording } from '../hooks/useRecording'
-import { useParseAudio } from '../hooks/useParseAudio'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
 import { colors, fontSize, fontWeight, spacing, radius, shadow, getAvatarColor } from '../utils/theme'
@@ -34,13 +30,9 @@ import {
 import type { Reminder } from '../models/types'
 
 export default function DashboardScreen() {
-  const { state: recState, durationMs, startRecording, stopRecording } = useRecording()
-  const { parseState, response, error, parseAudio, reset } = useParseAudio()
   const reminders = useReminderStore((s) => s.reminders)
   const contacts = useContactStore((s) => s.contacts)
   const getContact = useContactStore((s) => s.getContact)
-
-  const [modalVisible, setModalVisible] = useState(false)
 
   // Dakikada bir yenile — "gecikmiş" hesabı canlı kalsın
   const [nowTick, setNowTick] = useState(0)
@@ -48,12 +40,6 @@ export default function DashboardScreen() {
     const id = setInterval(() => setNowTick((t) => t + 1), 60_000)
     return () => clearInterval(id)
   }, [])
-
-  const displayState = recState === 'recording'
-    ? 'recording' as const
-    : parseState === 'sending'
-    ? 'processing' as const
-    : 'idle' as const
 
   // --- Metrikler ---
   const stats = useMemo(() => {
@@ -82,42 +68,6 @@ export default function DashboardScreen() {
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
       .slice(0, 3)
   }, [reminders])
-
-  const handlePressOut = async () => {
-    if (recState !== 'recording') return
-    const uri = await stopRecording()
-    if (!uri) return
-
-    const result = await parseAudio(uri)
-    if (result && result.reminders.length > 0) {
-      setModalVisible(true)
-    } else if (result && result.reminders.length === 0) {
-      dialog.alert({
-        title: 'Sonuç yok',
-        message: 'Ses kaydından hatırlatıcı çıkarılamadı. Tekrar deneyin.',
-        icon: 'information-circle-outline',
-        iconColor: colors.warning,
-      })
-      reset()
-    }
-  }
-
-  useEffect(() => {
-    if (error) {
-      dialog.alert({
-        title: 'Hata',
-        message: error,
-        icon: 'alert-circle-outline',
-        iconColor: colors.danger,
-        buttons: [{ text: 'Tamam', onPress: reset }],
-      })
-    }
-  }, [error, reset])
-
-  const handleModalClose = () => {
-    setModalVisible(false)
-    reset()
-  }
 
   // -------------------------- Render helpers --------------------------
 
@@ -338,27 +288,11 @@ export default function DashboardScreen() {
             </View>
             <Text style={styles.emptyTitle}>Hoş geldin!</Text>
             <Text style={styles.emptyText}>
-              Sağ alttaki mikrofon butonuna basılı tutarak ilk hatırlatıcını ekle.
+              Alttaki ortadaki mikrofon butonuna basılı tutarak ilk hatırlatıcını ekle.
             </Text>
           </View>
         )}
       </ScrollView>
-
-      {/* Mikrofon FAB — sağ alt */}
-      <View style={styles.fab} pointerEvents="box-none">
-        <MicButton
-          state={displayState}
-          durationMs={durationMs}
-          onLongPress={startRecording}
-          onPressOut={handlePressOut}
-        />
-      </View>
-
-      <ConfirmationModal
-        visible={modalVisible}
-        data={response}
-        onClose={handleModalClose}
-      />
     </View>
   )
 }
@@ -602,11 +536,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
-  },
-  // FAB — tab bar üstünde floating mic
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.lg + 70, // tab bar yüksekliği kadar yukarı
   },
 })

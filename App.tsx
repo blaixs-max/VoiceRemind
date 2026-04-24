@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 import ErrorBoundary from './src/components/ErrorBoundary'
 import { DialogHost } from './src/components/AppDialog'
+import CustomTabBar from './src/components/CustomTabBar'
 import AuthScreen from './src/screens/AuthScreen'
 import DashboardScreen from './src/screens/DashboardScreen'
 import ContactsScreen from './src/screens/ContactsScreen'
@@ -117,34 +118,9 @@ function MainApp() {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'grid-outline'
-          if (route.name === 'Panel') iconName = 'grid-outline'
-          else if (route.name === 'Hatırlatıcılar') iconName = 'notifications-outline'
-          else if (route.name === 'Cariler') iconName = 'people-outline'
-          return <Ionicons name={iconName} size={size} color={color} />
-        },
-        tabBarActiveTintColor: colors.primaryLight,
-        tabBarInactiveTintColor: colors.textOnDarkMuted,
-        tabBarStyle: {
-          backgroundColor: colors.bgSecondary,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          height: 66,
-          paddingTop: 6,
-          paddingBottom: 10,
-          elevation: 18,
-          shadowColor: '#000',
-          shadowOpacity: 0.35,
-          shadowOffset: { width: 0, height: -4 },
-          shadowRadius: 12,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: fontWeight.semibold,
-          letterSpacing: -0.1,
-        },
+      // Custom tab bar — rounded top + ortada floating mic FAB
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerStyle: {
           backgroundColor: colors.bgSecondary,
         },
@@ -164,7 +140,7 @@ function MainApp() {
             onPress={signOut}
           />
         ),
-      })}
+      }}
     >
       <Tab.Screen name="Panel" component={DashboardScreen} />
       <Tab.Screen
