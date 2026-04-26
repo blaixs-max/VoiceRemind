@@ -15,10 +15,14 @@ const DAY_NAMES: Record<string, number> = {
 
 const TIME_WORDS: Record<string, number> = {
   sabah: 9,
-  öğlen: 12, oglen: 12,
+  'öğleden önce': 10, 'ogleden once': 10,
+  öğlen: 12, oglen: 12, öğle: 12, ogle: 12,
   'öğleden sonra': 14, 'ogleden sonra': 14,
+  ikindi: 16,
+  'akşamüstü': 17, 'aksamustu': 17, 'akşam üstü': 17, 'aksam ustu': 17,
   akşam: 19, aksam: 19,
   gece: 22,
+  'gece yarısı': 0, 'gece yarisi': 0,
 }
 
 // Türkçe sayı sözcükleri → rakam
@@ -68,9 +72,13 @@ export function parseTurkishDate(
   const minute = resolveMinute(input)
   let confident = true
 
+  // Tarih belirsizse implicit "bugün" — saat verildiyse confident kalır
+  // ("akşam 8" veya "saat 14" gibi). Saat de yoksa gerçekten belirsiz → düşük güven.
   if (!date) {
     date = cloneDate(now)
-    confident = false
+    if (hour === null) {
+      confident = false
+    }
   }
 
   if (hour === null) {
@@ -98,31 +106,41 @@ export function parseTurkishDate(
 // --- Göreceli Zaman ---
 
 function resolveRelativeTime(input: string, now: Date): Date | null {
-  // "10 dakika sonra", "5 dakika içinde", "10 dk sonra"
-  const dakikaMatch = input.match(/(\d+)\s*(?:dakika|dk)\s*(?:sonra|i[çc]inde)/)
+  // "az sonra", "birazdan", "biraz sonra" → 5 dakika sonra (kabataslak)
+  if (/\b(?:az\s+sonra|birazdan|biraz\s+sonra)\b/.test(input)) {
+    return new Date(now.getTime() + 5 * 60_000)
+  }
+
+  // "şimdi" → şu an (notification için 10 sn buffer ekle ki geçmişte kalmasın)
+  if (/^\s*[şs]imdi\b/.test(input)) {
+    return new Date(now.getTime() + 10_000)
+  }
+
+  // "10 dakika sonra", "5 dakika içinde", "10 dk sonra", "10 dakika içerisinde"
+  const dakikaMatch = input.match(/(\d+)\s*(?:dakika|dk)\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
   if (dakikaMatch) {
     const mins = parseInt(dakikaMatch[1], 10)
     return new Date(now.getTime() + mins * 60_000)
   }
 
   // "bir/iki/üç dakika sonra" — Türkçe sayı ile
-  for (const [word, num] of Object.entries(TURKISH_NUMBERS)) {
-    const pattern = new RegExp(`${word}\\s+(?:dakika|dk)\\s*(?:sonra|i[çc]inde)`)
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+(?:dakika|dk)\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
     if (pattern.test(input)) {
       return new Date(now.getTime() + num * 60_000)
     }
   }
 
   // "1 saat sonra", "2 saat içinde"
-  const saatSonraMatch = input.match(/(\d+)\s*saat\s*(?:sonra|i[çc]inde)/)
+  const saatSonraMatch = input.match(/(\d+)\s*saat\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
   if (saatSonraMatch) {
     const hours = parseInt(saatSonraMatch[1], 10)
     return new Date(now.getTime() + hours * 3600_000)
   }
 
   // "bir saat sonra", "iki saat sonra" — Türkçe sayı ile
-  for (const [word, num] of Object.entries(TURKISH_NUMBERS)) {
-    const pattern = new RegExp(`${word}\\s+saat\\s*(?:sonra|i[çc]inde)`)
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+saat\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
     if (pattern.test(input)) {
       return new Date(now.getTime() + num * 3600_000)
     }
@@ -134,7 +152,7 @@ function resolveRelativeTime(input: string, now: Date): Date | null {
   }
 
   // "1.5 saat sonra", "1,5 saat sonra"
-  const decimalMatch = input.match(/(\d+)[.,](\d)\s*saat\s*(?:sonra|i[çc]inde)/)
+  const decimalMatch = input.match(/(\d+)[.,](\d)\s*saat\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
   if (decimalMatch) {
     const hours = parseInt(decimalMatch[1], 10)
     const fraction = parseInt(decimalMatch[2], 10) / 10
@@ -142,6 +160,14 @@ function resolveRelativeTime(input: string, now: Date): Date | null {
   }
 
   return null
+}
+
+/**
+ * TURKISH_NUMBERS'ı uzunluk sırasına göre döndürür: "on bir" "on"dan, "yirmi" "iki"den önce.
+ * Aksi halde "on bir saat sonra" → "on" matchleyip 10 saat olarak yanlış parse edilebilir.
+ */
+function turkishNumbersDescending(): Array<[string, number]> {
+  return Object.entries(TURKISH_NUMBERS).sort(([a], [b]) => b.length - a.length)
 }
 
 // --- Normalizasyon ---
@@ -158,8 +184,69 @@ function normalize(text: string): string {
 
 function resolveDate(input: string, now: Date): Date | null {
   if (/bug[üu]n/.test(input)) return cloneDate(now)
+  if (/yar[ıi]ndan\s+sonra/.test(input)) return addDays(now, 2)  // "yarından sonra" → öbür gün
   if (/yar[ıi]n/.test(input)) return addDays(now, 1)
   if (/[öo]b[üu]r\s*g[üu]n/.test(input)) return addDays(now, 2)
+
+  // --- Tarih shift'leri: "X gün/hafta/ay/yıl sonra" ---
+
+  // "3 gün sonra", "5 gün içinde", "10 gün içerisinde"
+  const gunSonraMatch = input.match(/(\d+)\s*g[üu]n\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
+  if (gunSonraMatch) return addDays(now, parseInt(gunSonraMatch[1], 10))
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+g[üu]n\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
+    if (pattern.test(input)) return addDays(now, num)
+  }
+
+  // "2 hafta sonra", "iki hafta içinde"
+  const haftaSonraMatch = input.match(/(\d+)\s*hafta\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
+  if (haftaSonraMatch) return addDays(now, parseInt(haftaSonraMatch[1], 10) * 7)
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+hafta\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
+    if (pattern.test(input)) return addDays(now, num * 7)
+  }
+
+  // "3 ay sonra", "altı ay içinde"
+  const aySonraMatch = input.match(/(\d+)\s*ay\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
+  if (aySonraMatch) {
+    const d = cloneDate(now)
+    d.setMonth(d.getMonth() + parseInt(aySonraMatch[1], 10))
+    return d
+  }
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+ay\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
+    if (pattern.test(input)) {
+      const d = cloneDate(now)
+      d.setMonth(d.getMonth() + num)
+      return d
+    }
+  }
+
+  // "1 yıl sonra", "iki sene sonra"
+  const yilSonraMatch = input.match(/(\d+)\s*(?:y[ıi]l|sene)\s*(?:sonra|i[çc]inde|i[çc]erisinde)/)
+  if (yilSonraMatch) {
+    const d = cloneDate(now)
+    d.setFullYear(d.getFullYear() + parseInt(yilSonraMatch[1], 10))
+    return d
+  }
+  for (const [word, num] of turkishNumbersDescending()) {
+    const pattern = new RegExp(`${word}\\s+(?:y[ıi]l|sene)\\s*(?:sonra|i[çc]inde|i[çc]erisinde)`)
+    if (pattern.test(input)) {
+      const d = cloneDate(now)
+      d.setFullYear(d.getFullYear() + num)
+      return d
+    }
+  }
+
+  // "gelecek hafta cuma" / "önümüzdeki hafta perşembe" — opsiyonel gün adı
+  const gelecekHaftaMatch = input.match(/(?:gelecek|[öo]n[üu]m[üu]zdeki)\s+hafta(?:\s+(\S+))?/)
+  if (gelecekHaftaMatch) {
+    if (gelecekHaftaMatch[1]) {
+      const dayNum = DAY_NAMES[gelecekHaftaMatch[1]]
+      if (dayNum !== undefined) return getNextWeekday(now, dayNum, true)
+    }
+    return addDays(now, 7)
+  }
 
   // "haftaya salı" vs "haftaya" — \S+ ile Türkçe karakter desteği
   const haftayaMatch = input.match(/haftaya\s+(\S+)/)
@@ -171,6 +258,14 @@ function resolveDate(input: string, now: Date): Date | null {
     return addDays(now, 7)
   }
   if (/\bhaftaya\b/.test(input)) return addDays(now, 7)
+
+  // "gelecek pazartesi" / "önümüzdeki cuma" — gün adı yalnız (hafta kelimesi yok)
+  const nextNamedDayMatch = input.match(/(?:gelecek|[öo]n[üu]m[üu]zdeki)\s+(\S+)/)
+  if (nextNamedDayMatch) {
+    const dayNum = DAY_NAMES[nextNamedDayMatch[1]]
+    if (dayNum !== undefined) return getNextWeekday(now, dayNum, true)
+    // "gelecek ay" → DAY_NAMES'te yok → aşağıdaki gelecek ay pattern'ine düşer
+  }
 
   // gün adı — "salı", "cuma"
   // Uzun isimleri önce kontrol et: "cumartesi" "cuma"dan, "pazartesi" "pazar"dan önce eşleşmeli
@@ -239,7 +334,8 @@ function resolveHour(input: string): number | null {
   }
 
   // "akşam 8", "sabah 7" — zaman dilimi + saat
-  for (const [word] of Object.entries(TIME_WORDS)) {
+  // Uzun anahtarlar önce: "öğleden sonra" "öğle"den önce match etmeli
+  for (const [word] of timeWordsDescending()) {
     const m = input.match(new RegExp(word + '\\s+(\\d{1,2})'))
     if (m) {
       let h = parseInt(m[1], 10)
@@ -267,17 +363,23 @@ function resolveHour(input: string): number | null {
   if (suffixMatch) return parseInt(suffixMatch[1], 10)
 
   // Türkçe sayı sözcüğü ile saat: "on altıda", "sekizde"
-  for (const [word, num] of Object.entries(TURKISH_NUMBERS)) {
-    const pattern = new RegExp(`\\b${word}[''\\s]*(?:de|da|te|ta)\\b`)
+  for (const [word, num] of turkishNumbersDescending()) {
+    // \b kullanmıyoruz çünkü Türkçe karakter (ü, ç vs.) ASCII word char değil → boundary tanımıyor
+    const pattern = new RegExp(`${word}[''\\s]*(?:de|da|te|ta)\\b`)
     if (pattern.test(input)) return num
   }
 
-  // sadece zaman kelimesi — "sabah" → 09:00
-  for (const [word, defaultHour] of Object.entries(TIME_WORDS)) {
+  // sadece zaman kelimesi — "sabah" → 09:00 — uzun anahtarlar önce
+  for (const [word, defaultHour] of timeWordsDescending()) {
     if (input.includes(word)) return defaultHour
   }
 
   return null
+}
+
+/** TIME_WORDS uzunluk sırasına göre — "öğleden sonra" "öğle"den önce match etmesi için */
+function timeWordsDescending(): Array<[string, number]> {
+  return Object.entries(TIME_WORDS).sort(([a], [b]) => b.length - a.length)
 }
 
 function resolveMinute(input: string): number {
