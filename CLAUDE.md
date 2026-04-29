@@ -3,7 +3,7 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
-## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29 akşam)
+## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29 gece, **iOS Submit for Review COMPLETED**)
 
 **Son commit:** `fd07561` (origin/main ile senkron, sonraki commit runbook fix + app.json cleanup + handoff güncellemesi).
 
@@ -13,39 +13,87 @@
 - **Google Play app oluşturuldu:** `Voicely AI — Sesli Hatırlatıcı` (2026-04-26)
 - **Apple Developer Program enrollment:** ONAYLANDI (2026-04-29 sabah)
 - **iOS preview build (ad-hoc):** başarılı, kişisel iPhone'da smoke test PASS (2026-04-29 öğle)
-- **iOS production build:** başarılı, App Store Connect'e upload edildi (Build ID: `f1d01177-4ce1-4b31-9b63-a80047ec3268`, build number 2, 2026-04-29 akşam)
+- **iOS production build:** başarılı, TestFlight'ta Build 3 (latest) — Build 2 ilk upload, sonradan Build 3 ile değiştirildi
 - **App Store Connect app oluşturuldu:** Voicely AI, ASC App ID `6764582214`, Bundle `com.blaixs.VoiceRemind`, Primary Language Turkish, Available Territories Turkey only, Categories: Productivity (primary) + Business (secondary)
 - **App Privacy survey published:** 4 data type declared (Email Address, Audio Data, Other User Content, User ID — hepsi Linked=Yes, Tracking=No, Purpose=App Functionality)
-- **Privacy Policy URL set:** https://blaixs-max.github.io/VoiceRemind/privacy/
+- **Privacy Policy URL set:** https://blaixs-max.github.io/VoiceRemind/privacy/ (canlı, doğrulandı 2026-04-29)
 - **Apple credentials EAS'ta kayıtlı:** Distribution Cert (serial `7EBCAA7598FFB62841B286D453C53B2C`, exp 2027-04-29), App Store + Ad-Hoc Provisioning Profiles, APNS Push Key, ASC API Key (`5U3M99K3LJ` — EAS otomatik oluşturdu)
 - **TestFlight Internal Testing group otomatik oluştu:** "Team (Expo)", blaixs@gmail.com tester olarak eklendi
 - Edge Function (parse-reminder) redeploy edildi
 - Eski preview APK (Faz 9 tarihli) `secrets/voicely-latest.apk`'a indirildi (paket sahipliği doğrulaması için)
 
-### ⏳ Devam Eden — Acil Bir Sonraki Adımlar
+### 🚀 iOS App Store — SUBMITTED FOR REVIEW (2026-04-29 gece)
 
-**iOS — sıradaki adım: Submit for Review (Apple processing bittikten sonra):**
-1. **Apple processing bekle (~5-30 dk)** — "Voicely AI build is ready to test" maili gelecek
-2. **TestFlight smoke test** — iPhone'da TestFlight app → Voicely AI install → 10 dk hızlı senaryo testi (`docs/apple-runbook.md` Faz 5.3)
-3. **"Missing Compliance" uyarısı** çıkarsa Manage → "Does your app use encryption?" → No (app.json'da `ITSAppUsesNonExemptEncryption: false` var ama Apple bazen yine soruyor)
-4. **Screenshots çek** (~30 dk) — iPhone 6.7" (1290×2796) 6 adet, `docs/apple-runbook.md` Faz 6.1 listesi
-5. **Metadata doldur** (App Store Connect → 1.0 Prepare for Submission):
-   - Description (`docs/store-listing.md`'den kopyala)
-   - Keywords, Promotional Text, What's New
-   - Support URL, Marketing URL
-   - App Review Information (demo hesap: `reviewer@voicely.test` / `Reviewer2026!` — Supabase'de pre-create)
-6. **Submit for Review** → Apple review 2-3 gün
+Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 
-**Android (1.5 gün quota bekleniyor — reset 2026-05-01):**
+**Submitted state (canon):**
+- **Build:** Build 3 (1.0.0) — TestFlight'tan seçildi
+- **Screenshots iPhone 6.5" Display:** 6 adet (1242×2688) — kullanıcı 6.7"→6.5" dönüştürdü, App Store kabul etti
+- **Screenshots iPad Pro 13" Display:** 8 adet (2064×2752) — `scripts/generate_ipad_screenshots.py` ile generate edildi (iPhone PNG'ler dark navy `#0F172A` canvas üzerine ortalandı, supportsTablet:true zorunluluğu için fallback)
+- **Description:** **KISA versiyon** submitted (uzun versiyon "invalid characters" hatası verdi — bkz. Bilinen Sorunlar)
+- **Promotional Text:** 159 char Türkçe
+- **Keywords:** `hatırlatıcı,sesli,AI,yapay zeka,hatırla,görev,CRM,müşteri,takip,ajanda,not,bildirim`
+- **Support URL:** https://blaixs-max.github.io/VoiceRemind/support/
+- **Marketing URL:** https://blaixs-max.github.io/VoiceRemind/
+- **Copyright:** `2026 [Hasan ...]`
+- **Age Rating:** 4+ (7-step questionnaire, hepsi None/No)
+- **Routing App Coverage:** boş (productivity app, navigation kategorisi değil)
+- **Game Center:** Off
+- **App Review Information:**
+  - Sign-in: required
+  - Demo creds: `blaixs+reviewer@gmail.com` / `Reviewer2026!` (kullanıcı kendi Voicely AI uygulamasından register flow ile oluşturdu, 3 hatırlatıcı + 2 cari pre-populated)
+  - Notes: bilingual (TR/EN) reviewer rehberi — Türkçe dictation kurulum talimatı + populated demo hesap vurgusu + 30 dk minimum test akışı
+  - Contact: blaixs@gmail.com
+- **Export Compliance:** No (HTTPS only, no custom crypto)
+- **Content Rights:** No
+- **IDFA:** No
+- **Version Release:** [manuel/otomatik — kullanıcı seçimi]
+
+**Pre-submit Apple validator engelleri (çözüldü):**
+1. ✅ "iPad 13" screenshot zorunlu" — Python script ile çözüldü
+2. ✅ "Age Rating questionnaire eksik" — 7-step doldurulup Save edildi
+3. ✅ "App Privacy not published" — survey doldurulup Published
+
+**Submission timeline:**
+- Build 3 TestFlight: ~2026-04-29 öğle
+- App Privacy Published: 2026-04-29 akşam
+- Age Rating saved: 2026-04-29 gece
+- iPad screenshots generated: 2026-04-29 gece
+- All metadata + Submit for Review: 2026-04-29 gece (~24:00 yaklaşık)
+
+### ⚠️ Bilinen Sorunlar (1.0.1'de çözülecek)
+
+#### 1. Description "Invalid Characters" — uzun versiyon kabul edilmedi
+- **Sorun:** Apple validator uzun emoji'li/em-dash'li/akıllı tırnaklı Description'a "This field contains one or more invalid characters" döndü
+- **Workaround:** Notepad'den geçirilmiş, emoji'siz, ASCII bullet (`-`), düz tırnak versiyonu submit edildi
+- **Kök sebep:** Browser clipboard'da kalmış zero-width characters / smart quotes / emoji placeholder bytes
+- **1.0.1 fix:** Notepad UTF-8 save → reload workflow ile uzun versiyonu yeniden hazırla, App Store'da Description güncelle (yeni binary gerektirmez, ama version update'le birlikte yapmak temiz)
+
+#### 2. Manuel hatırlatıcı ekleme YOK
+- **Sorun:** Reviewer Türkçe dictation'a sahip değilse uygulamayı tam test edemez. Demo hesap pre-populated reminders ile fallback'i sağlar ama bu ideal değil.
+- **Risk:** Apple "Cannot evaluate functionality" diye reject edebilir (düşük olasılık çünkü Notes'ta açıklandı + populated demo)
+- **1.0.1 fix:** Reminders ekranına "+" FAB ekle → manuel form (title, datetime picker, optional contact). Sesli akış kalıcı, manuel ekleme yedek yol.
+
+#### 3. iPad screenshot'lar gerçek iPad UI'ı göstermiyor
+- **Sorun:** Generate edilen screenshot'lar iPhone PNG'lerin iPad canvas'a center-fit edilmiş hali. Apple kabul etti ama gerçekçi değil.
+- **1.0.1 fix:** macOS makinede iPad simulator'da gerçek UI'ı çek (eğer iPad layout'u gerçekten optimize edildiyse). Alternatif: `app.json`'da `supportsTablet: false` yap → iPad zorunluluğu kalkar (hedef kullanıcı zaten phone-first).
+
+#### 4. Sentry / crash reporting yok
+- **Sorun:** Production'da crash'ler görünmez. İlk kullanıcılar geldiğinde bug'lar kaybolur.
+- **1.0.1 fix:** `@sentry/react-native` entegrasyonu — `app.json` plugin + `App.tsx` Sentry.init() + `src/utils/errorReporting.ts` helper. DSN kullanıcı tarafından sentry.io'da yeni project oluşturulup alınacak. Auth flow'a `setUserContext` eklenecek (login/logout). Privacy: `beforeSend` callback ile audio file path'lerini filtrele.
+
+### 🤖 Android — EAS Quota Bekleme (reset 2026-05-01)
+
 - Faz 1.5: `secrets/voicely-latest.apk`'yı Play Console "APK yükle" ile upload (paket sahipliği doğrulaması). SHA-256 zaten eşleşti (`8E:87:57:A1:01...`).
 - Faz 2: Service account JSON üret → `secrets/google-play-service-account.json`'a koy
 - Faz 5-9: Store listing + Data Safety + Content Rating + Target Audience formları (build gerekmez, paralel doldurulabilir — kaynak: `docs/store-listing.md` + `docs/data-safety.md`)
-- 2026-05-01 quota reset → `eas build --platform android --profile production` → AAB üretimi → `eas submit` → Closed Testing 14 gün → Production
-- **EAS server-side versionCode 2'den 3'e auto-incremented** (önceki başarısız production build attempt'inde, sonraki build code 3 ile gidecek)
+- **2026-05-01 quota reset →** `eas build --platform android --profile production` → AAB üretimi → `eas submit` → Closed Testing 14 gün → Production
+- **EAS server-side versionCode:** 3 (sonraki build code'u). Build day'i Sentry de eklenmiş olmalı (1.0.1 olarak hem iOS hem Android tek build sprint'i).
 
-### 🗓 Tahmini Yayın Tarihleri (Paralel İlerleme)
-- **iOS App Store:** ~2026-05-03 (TestFlight test 1 gün → metadata + screenshots → Submit for Review → Apple review 2-3 gün)
-- **Google Play:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
+### 🗓 Tahmini Yayın Tarihleri (Updated)
+- **iOS App Store v1.0:** ~2026-05-01/05-03 (Apple review 24-72h, submit edildi 2026-04-29)
+- **Google Play v1.0:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
+- **iOS + Android v1.0.1 (Sentry, manuel reminder, uzun desc):** ~2026-05-15-20
 
 ### 🔑 Önemli State Bilgileri
 - **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı)
@@ -322,12 +370,15 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] Pricing & Availability: Free, Turkey only
 - [x] App Privacy survey: 4 data type declared + Published (2026-04-29)
 - [x] TestFlight upload: `eas submit --platform ios --latest` → Submitted (2026-04-29)
-- [ ] **ŞİMDİ:** Apple processing (5-30 dk) → TestFlight smoke test iPhone'da
-- [ ] Screenshots: 6.7" iPhone + iPad 12.9" (`docs/apple-runbook.md` Faz 6)
-- [ ] Metadata doldur: Description, Keywords, Promo Text, What's New, Support URL
-- [ ] App Review Information: demo hesap (reviewer@voicely.test) + reviewer notes
-- [ ] App Store Review submit
-- [ ] Production release
+- [x] Apple processing → TestFlight smoke test iPhone'da PASS (2026-04-29)
+- [x] Screenshots iPhone 6.5" Display: 6 adet (1242×2688) — kullanıcı 6.7"'lik orijinalleri 6.5" boyutuna indirgedi
+- [x] Screenshots iPad Pro 13" Display: 8 adet (2064×2752) — `scripts/generate_ipad_screenshots.py` ile generate (Python+Pillow, dark navy `#0F172A` canvas üstüne center-fit)
+- [x] Metadata doldur: Description (kısa versiyon — uzun "invalid characters" verdi), Keywords, Promo Text, Support/Marketing URL, Copyright
+- [x] App Review Information: demo hesap `blaixs+reviewer@gmail.com` / `Reviewer2026!` (kullanıcı kendi register flow'undan oluşturdu, 3 hatırlatıcı + 2 cari pre-populated), bilingual TR/EN reviewer notes
+- [x] Age Rating: 7-step questionnaire → 4+ (hepsi None/No)
+- [x] **Submit for Review** — gönderildi 2026-04-29 gece, Apple review beklemede
+- [ ] Apple onay/red yanıtı (24-72h)
+- [ ] Production release (manuel veya otomatik)
 
 **Android — Google Play Store yolculuğu** ($25 tek seferlik Google Play Dev)
 - [x] Google Play Console hesap açılışı — **onaylandı 2026-04-23**

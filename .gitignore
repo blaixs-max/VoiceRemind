@@ -51,3 +51,6 @@ AuthKey_*.p8
 
 # Ephemeral tester sharing QR codes (regenerated per tunnel session)
 tester-qr.png
+
+# Working files for screenshot generation (intermediate, user-private)
+iphone-screenshots/

@@ -202,15 +202,43 @@ Two ways:
 | 5 | Contact detail | Profile + call/email buttons |
 | 6 | Search | Arama aktif + filtreli sonuçlar |
 
-### 6.2 Screenshot boyut doğrulama
-iPhone 15/16 Pro Max'ta çekilen screenshot = **1290×2796** (tam App Store gereksinimi). Başka iPhone'da çekilirse script dönüştürür:
+### 6.2 Screenshot boyut seçimi
 
+App Store Connect 2024-2026 itibarıyla şu kategorilerden **en az birini** kabul ediyor:
+- **iPhone 6.9" Display** = 1320×2868 (iPhone 16 Pro Max)
+- **iPhone 6.7" Display** = 1290×2796 (iPhone 14/15/16 Pro Max) — **PRIMARY**, default tercih
+- **iPhone 6.5" Display** = 1242×2688 (iPhone XS Max, 11 Pro Max) — legacy ama hâlâ kabul ediliyor
+- **iPhone 5.5" Display** = 1242×2208 — legacy, opsiyonel
+
+> **v1.0 deneyiminden:** Kullanıcı 6.7"'lik orijinalleri **1242×2688 (6.5")** boyutuna manuel resize etti ve App Store **kabul etti**. Submit butonu aktifleşti, "primary missing" uyarısı vermedi. Yani 6.5" tek başına yeterli; ama daha güvenli için 6.7" tab'ına da yüklemek tavsiye edilir.
+
+### 6.3 iPad screenshot (zorunlu eğer `supportsTablet: true`)
+
+`app.json` içinde `ios.supportsTablet: true` ise Apple **iPad 13" Display (2064×2752)** screenshot ister, yoksa Add for Review butonu **gri kalır**.
+
+**3 yol:**
+
+**A) Gerçek iPad simulator'da çek** (en doğru, macOS gerektirir):
 ```bash
-python scripts/verify-screenshots.py ./screenshots/
+# Mac üzerinde
+xcrun simctl boot "iPad Pro 13-inch (M4)"
+# Voicely AI'ı simülatörde aç, Cmd+S ile screenshot çek
 ```
 
-### 6.3 Upload
-App Store Connect → App → Version 1.0 → Screenshots → iPhone 6.7" → **Drag & drop 6 dosya**
+**B) iPhone screenshot'larını iPad canvas'a center-fit et** (Windows-friendly, hızlı):
+```bash
+python scripts/generate_ipad_screenshots.py
+# Source: VoiceRemind/iphone-screenshots/*.png|jpeg
+# Output: VoiceRemind/ipad-screenshots/ipad_NN.png (2064×2752, dark navy #0F172A bg)
+```
+> v1.0'da bu yol kullanıldı. Apple validator dimensions'ı kontrol eder, gerçek iPad UI'ı görmez. Kabul edildi.
+
+**C) `app.json`'da `supportsTablet: false` yap** ve iPad zorunluluğunu komple kaldır. Yeni build gerekir (1 EAS build slotu).
+
+### 6.4 Upload
+App Store Connect → 1.0 Prepare for Submission → Previews and Screenshots:
+- **iPhone tab** → 6.7" veya 6.5" sub-tab → 6 PNG drag&drop
+- **iPad tab** → iPad Pro 13" sub-tab → 3-8 PNG drag&drop (en az 3, max 10)
 
 ---
 
@@ -311,7 +339,52 @@ Email: **"Your app has been approved"**
 | TestFlight "Missing Compliance" | Build detaylarında "Manage" → No encryption |
 | Rejected: "Metadata missing" | App Store Connect → App Review Information bölümünü doldur (demo hesap zorunlu) |
 | Rejected: "Permission description generic" | `app.json` → `NSMicrophoneUsageDescription` daha açıklayıcı yap |
+| Description: "This field contains one or more invalid characters" | Browser clipboard'da hidden Unicode (zero-width chars, smart quotes, emoji placeholder bytes). Çözüm: metni Notepad'e yapıştır → tekrar kopyala → App Store'a yapıştır. Emoji'leri ve em-dash'leri (`—`) ASCII'ye çevir. Bullet'lar için `•` yerine `-` kullan. |
+| "Unable to Add for Review: You must upload a screenshot for 13-inch iPad displays" | `app.json` `supportsTablet: true` olduğu için iPad screenshot zorunlu. Çözüm: `scripts/generate_ipad_screenshots.py` ile generate et veya `supportsTablet: false` yap (yeni build gerekir). |
+| "Unable to Add for Review: You must respond to the required age ratings questions" | App Information → Age Rating → Edit → 7-step questionnaire'i doldur (hepsi None/No → Result: 4+) |
+| Save butonu kırmızı/gri ama spesifik hata yok | Birden fazla zorunlu alan eksik. Çözüm: F12 DevTools → Network → Save'e tıkla → kırmızı request'in Response panel'inde tam hata mesajı görünür. Veya sol menüde sarı/turuncu noktalı sayfa(lar)ı ara (App Privacy, Age Rating, App Information). |
 
 ---
 
-*Bu runbook her Apple submission öncesi güncellenir. Son update: 2026-04-22*
+## 📚 v1.0 Submission Lessons Learned (2026-04-29)
+
+İlk gerçek submission'dan kazanılan deneyimler — sonraki sürümlerde zaman kazandıracak:
+
+### 1. Description "Invalid Characters" tuzağı
+- **Belirti:** Description alanına uzun, emoji'li, formatlı metin yapıştırınca "This field contains one or more invalid characters" hatası
+- **Sebep:** Browser kopya-yapıştır sırasında akıllı tırnaklara dönüşüm + zero-width spaces + emoji placeholder bytes
+- **Workaround:** **Notepad UTF-8** üzerinden geçirip yapıştır. Emoji'siz, ASCII bullet (`-`), düz tırnak versiyonu hazırla.
+- **Submit edilen v1.0 versiyonu:** Kısa, sade Türkçe (~1620 char). Uzun versiyon v1.0.1'de update edilecek (Description App Store'da version-bound olduğu için).
+
+### 2. iPad zorunluluğu
+- **Belirti:** Add for Review gri, "Upload screenshot for 13-inch iPad displays" hatası
+- **Sebep:** `app.json` `supportsTablet: true` (default Expo değeri), iPad screenshot zorunlu
+- **Çözüm:** `scripts/generate_ipad_screenshots.py` (Python+Pillow) — iPhone PNG'leri 2064×2752 dark navy canvas'a center-fit eder
+
+### 3. Age Rating questionnaire (7 step)
+- 2024+ Apple binary NO/YES + NONE/INFREQUENT/FREQUENT yapısına geçti (eski "None" tek seçenekti)
+- Voicely AI productivity app → tüm sorulara **None/No** → Result: **4+**
+- Step 7'de "Not Applicable" default kalır (Made for Kids işaretleme)
+
+### 4. Demo Account hazırlığı
+- Reviewer kendi cihazından login yapacak — sadece Supabase'de auth kullanıcısı yetmez, **populated state** gerekir
+- En azından 3-5 hatırlatıcı + 2-3 cari + 1-2 tamamlanmış hatırlatıcı (dashboard streak için) olmalı
+- En kolay yol: kullanıcının **kendi telefonundaki Voicely AI'dan demo email ile register flow** ile hesap aç → birkaç hatırlatıcı oluştur. SQL insert'ten daha gerçekçi (auth trigger'lar düzgün çalışır).
+
+### 5. Reviewer Notes — bilingual + dictation rehberi
+- Reviewer çoğunlukla ABD/İrlanda merkezli, Türkçe dictation cihazında olmayabilir
+- Notes alanına **İngilizce talimat** + Türkçe dictation kurulum adımları + populated demo account vurgusu eklendi
+- Manuel hatırlatıcı ekleme henüz yok → reviewer için kritik fallback (1.0.1 priority)
+
+### 6. App Privacy "Published" zorunlu
+- Sadece doldurmak yetmiyor, **Publish** tıklamak gerekiyor — yoksa Save butonu kırmızı kalır ve hata mesajı belirsiz
+- App Privacy → 4 data type declared (Email, Audio, Other Content, User ID) — Linked=Yes, Tracking=No
+
+### 7. Country availability
+- Faz 1 strategy: Turkey only (App Information → Pricing & Availability)
+- Age Rating sayfasında görünen "173 countries" listesi sadece **rating çevirisi** (Brazil "AL", Korea "ALL"), country availability değil
+- v2.0'da global açılım yapılacak (English localization ile birlikte)
+
+---
+
+*Bu runbook her Apple submission öncesi güncellenir. Son update: 2026-04-29 (v1.0 submission complete)*

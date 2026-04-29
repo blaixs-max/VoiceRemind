@@ -53,6 +53,67 @@ Mikrofona basılı tut, Türkçe konuş, AI hatırlatıcını saniyeler içinde 
 (128 karakter)
 
 ### Description (4000 char max)
+
+> ⚠️ **v1.0 submission notu (2026-04-29):** Aşağıdaki **uzun/emoji'li versiyon** App Store Connect'e yapıştırılınca **"This field contains one or more invalid characters"** hatası verdi. Sebep: emoji placeholder bytes + akıllı tırnaklara browser conversion + zero-width chars. Bu yüzden **kısa/sade versiyon submit edildi** (aşağıda "v1.0 SUBMITTED VERSION" başlığı altında). Uzun versiyon **v1.0.1 update'inde** Notepad-UTF-8 sanitizasyonu sonrası tekrar denenir.
+
+#### v1.0 SUBMITTED VERSION (kısa, sade — App Store kabul etti)
+```
+Voicely AI, sesli komutla hatırlatıcı oluşturabileceğiniz ve müşterilerinizi (cari) takip edebileceğiniz Türkçe yapay zeka destekli bir üretkenlik uygulamasıdır.
+
+SESLİ GİRİŞ
+Mikrofona basılı tutun, ne zaman ne yapacağınızı söyleyin. Yapay zeka gerisini halleder.
+
+Örnek komutlar:
+- Yarın saat 3 te Ahmet Bey i ara
+- Pazartesi öğlen dişçi randevusu
+- 10 dakika sonra çayı ocaktan al
+- Yarın sabah 9 da Demir AS toplantısı
+
+AKILLI TÜRKÇE TARİH ANLAMA
+Günlük konuşma dilinizi doğal haliyle anlar.
+- Göreli zamanlar: 10 dakika sonra, yarım saat içinde, 3 gün sonra
+- Gün adları: yarın akşam, pazartesi sabah, cuma 14:30
+- Mutlak saatler: 16:30, sabah 8, öğleden sonra 2
+
+MİNİ CRM, MÜŞTERİ VE CARİ TAKİBİ
+Satışçılar, freelance ve danışmanlar için:
+- Cari kartı ve iletişim bilgileri (firma, kişi, telefon, e-posta, notlar)
+- Cari bazlı hatırlatıcı geçmişi
+- Tek dokunuşla arama ve e-posta
+- Hatırlatıcıları doğal konuşmada cari ile ilişkilendirir
+
+DASHBOARD
+- Bugünün hatırlatıcıları (tamamlanan ve bekleyen)
+- Gecikmiş hatırlatıcılar uyarısı
+- Haftalık tamamlanma oranı grafiği
+- En aktif müşteriler (son 30 gün)
+- Temas bekleyen müşteriler
+- Günlük tamamlanma serisi
+
+YEREL BİLDİRİM
+İnternet olmasa bile bildirim zamanında gelir, telefon kilitliyken bile.
+
+GİZLİLİK ÖNCELİKLİ
+- Ses kayıtlarınız işlendikten sonra anında silinir, asla saklanmaz
+- Verileriniz yalnızca size ait (Row-Level Security ile korunur)
+- Reklam takibi yok, analitik SDK yok
+- KVKK ve GDPR uyumlu
+
+KİMLER İÇİN İDEAL
+- Satış ekipleri ve saha çalışanları
+- Freelance ve bireysel danışmanlar
+- Gün içinde çok sayıda görev ve müşteri ile koşuşturan profesyoneller
+- Yapılacaklar listesini sesle yönetmek isteyen herkes
+
+HIZ
+- 2 saniyede hatırlatıcı oluşturma
+- Klavye yazmaktan 3 kat hızlı
+- Araba kullanırken, yürürken, eller doluyken çalışır
+
+Voicely AI: Konuş, biz hatırlatırız.
+```
+
+#### v1.0.1 PLANNED VERSION (uzun, emoji'li — Notepad sanitizasyonu sonrası deneyilecek)
 ```
 Voicely AI, sesli komutla hatırlatıcı oluşturabileceğiniz ve müşterilerinizi (cari) takip edebileceğiniz Türkçe bir yapay zeka destekli üretkenlik uygulamasıdır.
 

@@ -12,6 +12,30 @@ Bu doküman Play Console hesabı onaylandığı andan **Closed Testing track'ın
 
 ---
 
+## 📍 Mevcut Durum (2026-04-29 gece)
+
+- ✅ Play Console hesabı onaylandı (2026-04-23)
+- ✅ Play Console app oluşturuldu (`Voicely AI — Sesli Hatırlatıcı`, 2026-04-26)
+- ✅ Privacy Policy URL canlı: https://blaixs-max.github.io/VoiceRemind/privacy/
+- ⏸ **EAS Free quota dolu** — Android production AAB build için **2026-05-01 reset** bekleniyor
+- 📦 **iOS App Store v1.0** zaten **Submit for Review** edildi (2026-04-29 gece) — Apple review 24-72h
+- 🎯 **1 Mayıs sabahı:** EAS quota açılınca `eas build --platform android --profile production` → AAB → `eas submit`
+
+### Bu süreyi değerlendirme önerileri (build olmadan paralel):
+1. **Store Listing** (Faz 5) — copy `docs/store-listing.md`'den (uzun versiyon Google Play'de **invalid characters** sorunu yapmaz, rahatça yapıştır)
+2. **Data Safety** (Faz 6) — `docs/data-safety.md`'deki cevapları doldur
+3. **Content Rating questionnaire** (Faz 7) — Apple Age Rating'e benzer, hepsi None/No → IARC etiketi
+4. **Target Audience** (Faz 8) — 18+ adults
+5. **Service Account JSON** üret (`secrets/google-play-service-account.json`) — Faz 2
+6. **Paket sahipliği doğrulaması** — `secrets/voicely-latest.apk`'yı Internal Testing'e upload (SHA-256 zaten eşleşti: `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12`)
+
+### Sentry entegrasyonu (1.0.1 ile birlikte gelecek)
+- Mayıs 1 build'inde **hem Android hem iOS** için Sentry entegre edilmiş kod kullanılacak
+- iOS için bu **v1.0.1** olarak yeni bir Apple submission (review tekrar)
+- Detay: `CLAUDE.md` → "Bilinen Sorunlar (1.0.1'de çözülecek)" → Sentry kurulum planı
+
+---
+
 ## 📋 Play Console Zorunlu Kuralı: Closed Testing
 
 2023'ten beri **yeni Individual developer hesaplarda** production release için önce:
