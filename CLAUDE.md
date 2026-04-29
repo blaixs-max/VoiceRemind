@@ -3,30 +3,38 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
-## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29)
+## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29 akşam)
 
-**Son commit:** `84bab72` (origin/main ile senkron). Kod faz 10 + 10.1 dahil tüm güncellemeler.
+**Son commit:** `fd07561` (origin/main ile senkron, sonraki commit runbook fix + app.json cleanup + handoff güncellemesi).
 
 ### ✅ Tamamlanan Milestone'lar
 - Faz 1-10 + 10.1 tamamlandı (UI redesign + parser + Edge Function redeploy)
 - **Google Play Console hesabı:** onaylandı (2026-04-23)
 - **Google Play app oluşturuldu:** `Voicely AI — Sesli Hatırlatıcı` (2026-04-26)
-- **Apple Developer Program enrollment:** **ONAYLANDI** (2026-04-29) — iOS yolculuğu açıldı
-- Edge Function (parse-reminder) bugün redeploy edildi
+- **Apple Developer Program enrollment:** ONAYLANDI (2026-04-29 sabah)
+- **iOS preview build (ad-hoc):** başarılı, kişisel iPhone'da smoke test PASS (2026-04-29 öğle)
+- **iOS production build:** başarılı, App Store Connect'e upload edildi (Build ID: `f1d01177-4ce1-4b31-9b63-a80047ec3268`, build number 2, 2026-04-29 akşam)
+- **App Store Connect app oluşturuldu:** Voicely AI, ASC App ID `6764582214`, Bundle `com.blaixs.VoiceRemind`, Primary Language Turkish, Available Territories Turkey only, Categories: Productivity (primary) + Business (secondary)
+- **App Privacy survey published:** 4 data type declared (Email Address, Audio Data, Other User Content, User ID — hepsi Linked=Yes, Tracking=No, Purpose=App Functionality)
+- **Privacy Policy URL set:** https://blaixs-max.github.io/VoiceRemind/privacy/
+- **Apple credentials EAS'ta kayıtlı:** Distribution Cert (serial `7EBCAA7598FFB62841B286D453C53B2C`, exp 2027-04-29), App Store + Ad-Hoc Provisioning Profiles, APNS Push Key, ASC API Key (`5U3M99K3LJ` — EAS otomatik oluşturdu)
+- **TestFlight Internal Testing group otomatik oluştu:** "Team (Expo)", blaixs@gmail.com tester olarak eklendi
+- Edge Function (parse-reminder) redeploy edildi
 - Eski preview APK (Faz 9 tarihli) `secrets/voicely-latest.apk`'a indirildi (paket sahipliği doğrulaması için)
 
 ### ⏳ Devam Eden — Acil Bir Sonraki Adımlar
 
-**iOS (quota açık, hemen başlanabilir):**
-1. **[USER ACTION]** Kullanıcı kendi terminal'inde çalıştıracak (interaktif Apple ID + 2FA, sandbox'tan yapılamaz):
-   ```powershell
-   cd "C:\Users\hasan\OneDrive\Masaüstü\Asistan\VoiceRemind"
-   eas build --platform ios --profile preview
-   ```
-   Apple ID + password + 2FA + Individual team seç → EAS otomatik Distribution Certificate + Provisioning Profile oluşturur, sonra build kuyruğa girer.
-2. Build kuyrukta beklerken: App Store Connect'te app create (`docs/apple-runbook.md` Faz 2)
-3. Build bitince → `eas submit --platform ios --latest` → TestFlight
-4. Screenshots + metadata + Submit for Review (Apple review 2-3 gün)
+**iOS — sıradaki adım: Submit for Review (Apple processing bittikten sonra):**
+1. **Apple processing bekle (~5-30 dk)** — "Voicely AI build is ready to test" maili gelecek
+2. **TestFlight smoke test** — iPhone'da TestFlight app → Voicely AI install → 10 dk hızlı senaryo testi (`docs/apple-runbook.md` Faz 5.3)
+3. **"Missing Compliance" uyarısı** çıkarsa Manage → "Does your app use encryption?" → No (app.json'da `ITSAppUsesNonExemptEncryption: false` var ama Apple bazen yine soruyor)
+4. **Screenshots çek** (~30 dk) — iPhone 6.7" (1290×2796) 6 adet, `docs/apple-runbook.md` Faz 6.1 listesi
+5. **Metadata doldur** (App Store Connect → 1.0 Prepare for Submission):
+   - Description (`docs/store-listing.md`'den kopyala)
+   - Keywords, Promotional Text, What's New
+   - Support URL, Marketing URL
+   - App Review Information (demo hesap: `reviewer@voicely.test` / `Reviewer2026!` — Supabase'de pre-create)
+6. **Submit for Review** → Apple review 2-3 gün
 
 **Android (1.5 gün quota bekleniyor — reset 2026-05-01):**
 - Faz 1.5: `secrets/voicely-latest.apk`'yı Play Console "APK yükle" ile upload (paket sahipliği doğrulaması). SHA-256 zaten eşleşti (`8E:87:57:A1:01...`).
@@ -36,13 +44,17 @@
 - **EAS server-side versionCode 2'den 3'e auto-incremented** (önceki başarısız production build attempt'inde, sonraki build code 3 ile gidecek)
 
 ### 🗓 Tahmini Yayın Tarihleri (Paralel İlerleme)
-- **iOS App Store:** ~2026-05-03 (build hemen → TestFlight 1 gün → Review 2-3 gün)
+- **iOS App Store:** ~2026-05-03 (TestFlight test 1 gün → metadata + screenshots → Submit for Review → Apple review 2-3 gün)
 - **Google Play:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
 
 ### 🔑 Önemli State Bilgileri
 - **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı)
-- **EAS app server versionCode:** 3 (sonraki build)
-- **Apple credentials:** EAS'a HENÜZ bağlı değil (Apple ID auth bekleniyor)
+- **EAS Android versionCode:** 3 (sonraki build)
+- **Apple ASC App ID:** `6764582214`
+- **Apple Team ID:** `XRUJLSF5J9` (Fevzi Emrah Atabek, Individual)
+- **Apple Distribution Cert exp:** 2027-04-29 (1 yıl sonra rotate gerekli — EAS otomatik halleder)
+- **Apple session cookie konumu:** `C:\Users\hasan\.app-store\auth\blaixs@gmail.com\cookie` (~30 gün geçerli, expire olursa eas build/submit yeniden 2FA ister)
+- **iOS buildNumber kaynağı:** `appVersionSource: remote` (eas.json) → server-side autoIncrement, app.json'dan `buildNumber` field kaldırıldı
 - **Tunnel/tester paylaşım:** ngrok v3.38.0 binary swap edildi (`%APPDATA%\npm\node_modules\@expo\ngrok\node_modules\@expo\ngrok-bin-win32-x64\ngrok.exe`)
 
 ---
@@ -237,6 +249,8 @@ OPENAI_API_KEY=sk-proj-xxx
 - **Android package:** com.blaixs.VoiceRemind
 - **iOS bundle:** com.blaixs.VoiceRemind
 - **Son Android APK:** https://expo.dev/accounts/blaixs/projects/VoiceRemind/builds/519f0a48-cd43-4483-9c06-f0755d5379da
+- **Son iOS preview (ad-hoc):** https://expo.dev/accounts/blaixs/projects/VoiceRemind/builds/8015a2c6-7a73-4c8e-923c-eeab7df1e276
+- **Son iOS production (TestFlight'ta):** Build ID `f1d01177-4ce1-4b31-9b63-a80047ec3268` (build 2)
 
 ---
 
@@ -296,15 +310,23 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] GitHub Pages canlı: https://blaixs-max.github.io/VoiceRemind/ (privacy + support + landing)
 
 **iOS — App Store yolculuğu** ($99/yıl Apple Developer)
-- [x] Apple Developer Program enrollment — **ONAYLANDI** (2026-04-29)
-- [x] app.json iOS optimizasyonu (export compliance, build number)
+- [x] Apple Developer Program enrollment — ONAYLANDI (2026-04-29)
+- [x] app.json iOS optimizasyonu (export compliance — `ITSAppUsesNonExemptEncryption: false`)
 - [x] Privacy Policy + Support page (docs/privacy.md, docs/support.md)
 - [x] GitHub Pages setup (docs/_config.yml, Jekyll)
-- [ ] **ŞİMDİ:** `eas build --platform ios --profile preview` çalıştır → ilk seferde EAS otomatik Apple ID auth + Distribution Certificate + Provisioning Profile kurulumu yapar (interaktif, kullanıcı kendi terminal'inde)
-- [ ] App Store Connect uygulama kaydı (name + bundleId + SKU)
-- [ ] TestFlight upload: `eas submit --platform ios --latest`
-- [ ] Screenshots: 6.7" iPhone + iPad 12.9"
-- [ ] App Store Review submit (+ demo hesap bilgisi reviewer için)
+- [x] EAS Apple credentials kuruldu — Distribution Cert, App Store + Ad-Hoc Provisioning Profiles, APNS Key, ASC API Key (2026-04-29)
+- [x] iOS preview build (ad-hoc) → kişisel iPhone smoke test PASS (2026-04-29)
+- [x] iOS production build → Build 2 başarılı (2026-04-29)
+- [x] App Store Connect uygulama kaydı — ASC App ID `6764582214`, Voicely AI, com.blaixs.VoiceRemind (2026-04-29)
+- [x] App Information: Categories (Productivity + Business), Privacy Policy URL, Content Rights = No, Age 4+
+- [x] Pricing & Availability: Free, Turkey only
+- [x] App Privacy survey: 4 data type declared + Published (2026-04-29)
+- [x] TestFlight upload: `eas submit --platform ios --latest` → Submitted (2026-04-29)
+- [ ] **ŞİMDİ:** Apple processing (5-30 dk) → TestFlight smoke test iPhone'da
+- [ ] Screenshots: 6.7" iPhone + iPad 12.9" (`docs/apple-runbook.md` Faz 6)
+- [ ] Metadata doldur: Description, Keywords, Promo Text, What's New, Support URL
+- [ ] App Review Information: demo hesap (reviewer@voicely.test) + reviewer notes
+- [ ] App Store Review submit
 - [ ] Production release
 
 **Android — Google Play Store yolculuğu** ($25 tek seferlik Google Play Dev)

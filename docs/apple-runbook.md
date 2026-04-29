@@ -95,13 +95,24 @@ Bu aşamada metadata doldurmayı erteleyebilirsin (build yüklendikten sonra da 
 
 ## 📦 Faz 3 — İlk iOS Build (~15 dk)
 
-### 3.1 Preview build'i tetikle (TestFlight için)
+> **DİKKAT — Profile seçimi:**
+> - `preview` → `distribution: internal` → **ad-hoc imza** → sadece register edilmiş iPhone'lara EAS link ile install. **TestFlight kabul ETMEZ.** Sadece kişisel iPhone'da hızlı smoke test için.
+> - `production` → varsayılan App Store imza → **TestFlight + App Store yayını için doğru profile.**
+>
+> EAS Free quota ayda 15 iOS build. İki profile birden atmak yerine doğrudan `production` yeterli — kişisel iPhone'da test için TestFlight zaten ücretsiz dağıtım sağlıyor.
+
+### 3.1 Production build'i tetikle (TestFlight için)
 ```bash
 cd "C:/Users/hasan/OneDrive/Masaüstü/Asistan/VoiceRemind"
-eas build --platform ios --profile preview
+eas build --platform ios --profile production
 ```
 
-> **Not**: `preview` profili `app.json`'da simulator build için değil, internal distribution için tanımlı. TestFlight'a yükleme için ideal.
+İlk build sırasında EAS otomatik şunları yapar:
+- Apple Distribution Certificate oluşturma (yoksa)
+- App Store Provisioning Profile oluşturma
+- (Opsiyonel) APNS Push Key oluşturma — lokal bildirim için gerekmez ama gelecekte remote push eklenirse hazır olsun
+
+> **Eğer kişisel iPhone'da hızlı smoke test isteniyorsa** (TestFlight onayını beklemeden), önce `--profile preview` ile ad-hoc build atılıp UDID register edilebilir. Ama TestFlight için **mutlaka** ayrıca `production` build gerekir — preview IPA'sı App Store Connect'e gönderilemez.
 
 ### 3.2 Build durumunu izle
 - CLI'da canlı log akar
@@ -126,12 +137,17 @@ eas submit --platform ios --latest
 
 Prompts:
 ```
-? Which Apple ID → <senin email>
-? App-specific password → <oluştur: appleid.apple.com/account/manage>
-? Which app → Voicely AI (az önce kaydettiğin)
+? Apple ID → <senin email>
+? Apple ID password → <cookie cached ise sormaz>
+? Generate a new App Store Connect API Key? → Y
+? Which app → Voicely AI (otomatik bulur)
 ```
 
-> **App-specific password nedir?** Apple ID şifren yerine EAS'e verdiğin "dar kapsamlı" token. https://appleid.apple.com/account/manage → Sign-In and Security → App-Specific Passwords → **+** → "EAS Submit" → şifre kopyala.
+> **Apple session cookie:** İlk `eas build` sırasında 2FA + şifre girdiğinde fastlane cookie'yi `~/.app-store/auth/<email>/cookie` altına kaydeder, ~30 gün geçerli. Submit anında session cache'den okur, şifre sormaz.
+>
+> **App Store Connect API Key:** EAS otomatik oluşturup kendi sunucusunda saklar (Key ID + .p8 private key). Sonraki tüm submit'lerde reuse eder.
+>
+> **App-specific password (alternatif yol):** Eğer cookie expire olmuşsa veya ilk seferse Apple "App ID password" istediğinde **normal Apple ID şifren değil** app-specific password gir: https://appleid.apple.com/account/manage → Sign-In and Security → App-Specific Passwords → **+** → "EAS Submit" → 16-karakterli şifreyi kopyala.
 
 ### 4.2 TestFlight'a propagation
 - Upload **anında** tamamlanır (~2 dk)
