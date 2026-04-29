@@ -17,7 +17,6 @@ type ReminderState = {
   markPending: (id: string) => Promise<void>
   markDismissed: (id: string) => Promise<void>
   toggleImportant: (id: string) => Promise<void>
-  getByContact: (contactId: string) => Reminder[]
   reconcileNotifications: () => Promise<void>
 }
 
@@ -282,10 +281,6 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
       }))
       console.error('toggleImportant error:', error)
     }
-  },
-
-  getByContact: (contactId) => {
-    return get().reminders.filter((r) => r.contactId === contactId)
   },
 
   reconcileNotifications: async () => {

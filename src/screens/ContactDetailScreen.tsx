@@ -1,7 +1,7 @@
 // src/screens/ContactDetailScreen.tsx
 // Premium cari detay — profil kartı + aksiyon butonları + reminder listesi
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   View,
   Text,
@@ -31,7 +31,11 @@ export default function ContactDetailScreen() {
 
   const contact = useContactStore((s) => s.getContact(contactId))
   const deleteContact = useContactStore((s) => s.deleteContact)
-  const relatedReminders = useReminderStore((s) => s.getByContact(contactId))
+  const reminders = useReminderStore((s) => s.reminders)
+  const relatedReminders = useMemo(
+    () => reminders.filter((r) => r.contactId === contactId),
+    [reminders, contactId]
+  )
 
   if (!contact) {
     return (
