@@ -3,6 +3,50 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
+## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29)
+
+**Son commit:** `84bab72` (origin/main ile senkron). Kod faz 10 + 10.1 dahil tüm güncellemeler.
+
+### ✅ Tamamlanan Milestone'lar
+- Faz 1-10 + 10.1 tamamlandı (UI redesign + parser + Edge Function redeploy)
+- **Google Play Console hesabı:** onaylandı (2026-04-23)
+- **Google Play app oluşturuldu:** `Voicely AI — Sesli Hatırlatıcı` (2026-04-26)
+- **Apple Developer Program enrollment:** **ONAYLANDI** (2026-04-29) — iOS yolculuğu açıldı
+- Edge Function (parse-reminder) bugün redeploy edildi
+- Eski preview APK (Faz 9 tarihli) `secrets/voicely-latest.apk`'a indirildi (paket sahipliği doğrulaması için)
+
+### ⏳ Devam Eden — Acil Bir Sonraki Adımlar
+
+**iOS (quota açık, hemen başlanabilir):**
+1. **[USER ACTION]** Kullanıcı kendi terminal'inde çalıştıracak (interaktif Apple ID + 2FA, sandbox'tan yapılamaz):
+   ```powershell
+   cd "C:\Users\hasan\OneDrive\Masaüstü\Asistan\VoiceRemind"
+   eas build --platform ios --profile preview
+   ```
+   Apple ID + password + 2FA + Individual team seç → EAS otomatik Distribution Certificate + Provisioning Profile oluşturur, sonra build kuyruğa girer.
+2. Build kuyrukta beklerken: App Store Connect'te app create (`docs/apple-runbook.md` Faz 2)
+3. Build bitince → `eas submit --platform ios --latest` → TestFlight
+4. Screenshots + metadata + Submit for Review (Apple review 2-3 gün)
+
+**Android (1.5 gün quota bekleniyor — reset 2026-05-01):**
+- Faz 1.5: `secrets/voicely-latest.apk`'yı Play Console "APK yükle" ile upload (paket sahipliği doğrulaması). SHA-256 zaten eşleşti (`8E:87:57:A1:01...`).
+- Faz 2: Service account JSON üret → `secrets/google-play-service-account.json`'a koy
+- Faz 5-9: Store listing + Data Safety + Content Rating + Target Audience formları (build gerekmez, paralel doldurulabilir — kaynak: `docs/store-listing.md` + `docs/data-safety.md`)
+- 2026-05-01 quota reset → `eas build --platform android --profile production` → AAB üretimi → `eas submit` → Closed Testing 14 gün → Production
+- **EAS server-side versionCode 2'den 3'e auto-incremented** (önceki başarısız production build attempt'inde, sonraki build code 3 ile gidecek)
+
+### 🗓 Tahmini Yayın Tarihleri (Paralel İlerleme)
+- **iOS App Store:** ~2026-05-03 (build hemen → TestFlight 1 gün → Review 2-3 gün)
+- **Google Play:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
+
+### 🔑 Önemli State Bilgileri
+- **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı)
+- **EAS app server versionCode:** 3 (sonraki build)
+- **Apple credentials:** EAS'a HENÜZ bağlı değil (Apple ID auth bekleniyor)
+- **Tunnel/tester paylaşım:** ngrok v3.38.0 binary swap edildi (`%APPDATA%\npm\node_modules\@expo\ngrok\node_modules\@expo\ngrok-bin-win32-x64\ngrok.exe`)
+
+---
+
 ## Proje Ozeti
 
 iOS/Android sesli hatirlatici uygulamasi. Kullanici mikrofona basili tutar, konusur, ses Whisper STT ile metne cevrilir, GPT-4.1-mini ile intent parse edilir, deterministik Turkce tarih parser ile ISO datetime uretilir, onay modali gosterilir, lokal bildirim zamanlanir. Veriler Supabase bulut veritabaninda saklanir, kullanici auth ile korunur.
@@ -252,13 +296,12 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] GitHub Pages canlı: https://blaixs-max.github.io/VoiceRemind/ (privacy + support + landing)
 
 **iOS — App Store yolculuğu** ($99/yıl Apple Developer)
-- [ ] Apple Developer Program enrollment (Individual, bekleme ~1 gün)
+- [x] Apple Developer Program enrollment — **ONAYLANDI** (2026-04-29)
 - [x] app.json iOS optimizasyonu (export compliance, build number)
 - [x] Privacy Policy + Support page (docs/privacy.md, docs/support.md)
 - [x] GitHub Pages setup (docs/_config.yml, Jekyll)
-- [ ] `eas credentials` ile Apple ID bağlama
+- [ ] **ŞİMDİ:** `eas build --platform ios --profile preview` çalıştır → ilk seferde EAS otomatik Apple ID auth + Distribution Certificate + Provisioning Profile kurulumu yapar (interaktif, kullanıcı kendi terminal'inde)
 - [ ] App Store Connect uygulama kaydı (name + bundleId + SKU)
-- [ ] İlk iOS build: `eas build --platform ios --profile preview`
 - [ ] TestFlight upload: `eas submit --platform ios --latest`
 - [ ] Screenshots: 6.7" iPhone + iPad 12.9"
 - [ ] App Store Review submit (+ demo hesap bilgisi reviewer için)
