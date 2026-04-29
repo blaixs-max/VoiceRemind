@@ -23,7 +23,7 @@ Bu kuralı atlama yolu yok. Planlama buna göre.
 
 ---
 
-## 🚀 Faz 1 — Play Console'da Uygulama Oluştur (~10 dk)
+## 🚀 Faz 1 — Play Console'da Uygulama Oluştur (~10 dk) ✅ (2026-04-26)
 
 ### 1.1 Giriş
 https://play.google.com/console → Apps → **Create app**
@@ -39,6 +39,34 @@ https://play.google.com/console → Apps → **Create app**
 | Declarations — US export laws | ✅ |
 
 → **Create app**
+
+---
+
+## 🛡 Faz 1.5 — Paket Sahipliği Doğrulaması (~5 dk) ⚠️ Yeni Google Politikası
+
+> **Bu adım 2025'te eklendi**: yeni Individual hesaplar için Play Console, app oluşturduktan sonra "Android geliştirici doğrulaması → Paket anahtarlarını yönetme" ekranına yönlendiriyor. İmzalanmış bir APK upload ederek paket adının (`com.blaixs.VoiceRemind`) sahibi olduğunu kanıtlamamız gerek. Bu fingerprint Play Console'da kalıcı olarak kayıtlanır — sonraki tüm AAB/APK upload'lar bu key ile imzalanmış olmalı.
+
+### 1.5.1 Hangi key kullanılır?
+EAS Build, app başına bir Android upload-keystore yönetir (cloud'da). Tüm preview/production build'ler aynı keystore ile imzalanır → SHA-256 sabit kalır:
+
+```
+8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12
+```
+
+### 1.5.2 APK indirme
+EAS bulutunda zaten Faz 9'dan kalma preview APK'lar var. En son APK URL'sini almak için:
+```bash
+eas build:list --platform android --limit 1 --json --non-interactive
+```
+JSON'daki `artifacts.buildUrl` alanını al, `curl` ile lokal'e indir (ör. `secrets/voicely-latest.apk`).
+
+### 1.5.3 Upload
+Play Console → **Android geliştirici doğrulaması → Paket anahtarlarını yönetme** → **APK yükle** → indirilen APK'yı seç → submit.
+
+> Bu APK doğrulama amaçlıdır, **production sürümüne gitmez**. Closed Testing / Production track'lerine ayrı bir AAB build edip yükleyeceğiz (Faz 3-4).
+
+### 1.5.4 Doğrulama tamam
+Upload sonrası "Taslak" durumu kalkar, sol menüde Politika durumu, Kullanıcılar ve izinler vs. açılır.
 
 ---
 
@@ -299,4 +327,4 @@ Reddedilme email'inde **Resolution Center link'i** var. Oradan cevap + düzeltme
 
 ---
 
-*Son update: 2026-04-22*
+*Son update: 2026-04-26 — Faz 1 tamamlandı (Play Console app create), Faz 1.5 eklendi (paket sahipliği doğrulaması, yeni Google politikası).*

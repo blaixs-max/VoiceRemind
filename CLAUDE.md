@@ -73,6 +73,11 @@ VoiceRemind/
 │   │   └── turkishDateParser.ts     # Deno-compatible parser kopyası (src ile senkron tutulmalı!)
 │   └── migrations/
 │       └── 001_create_tables.sql    # contacts + reminders tabloları + RLS policy'ler
+├── scripts/
+│   ├── test-parser.ts               # Türkçe parser regression smoke test (31 senaryo)
+│   ├── process-icon.py              # Source wide PNG → 1024x1024 App Store icon
+│   └── build-feature-graphic.py     # Icon + wordmark → Play Store 1024x500 banner
+├── secrets/                         # gitignore'lu — service account JSON + tester APK
 └── .env                             # EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```
 
@@ -149,6 +154,9 @@ supabase functions deploy parse-reminder --no-verify-jwt --project-ref dtepkruum
 # TypeScript kontrol
 npx tsc --noEmit
 
+# Türkçe tarih parser regression smoke test (31 senaryo)
+npx tsx scripts/test-parser.ts
+
 # Android APK build (standalone, dev server gereksiz)
 eas build --platform android --profile preview
 
@@ -206,6 +214,13 @@ OPENAI_API_KEY=sk-proj-xxx
   - Mic glow fix: 120px centered + pointerEvents="none" + daha transparent (commit `798ccff`)
   - SafeAreaProvider bg: iOS yuvarlak ekran köşelerinde beyaz sızma kapatıldı
   - Mic button artık tüm tab'lardan erişilebilir (state CustomTabBar'a lift edildi)
+- [x] **Faz 10.1** — Parser genişletme + Edge Function redeploy (2026-04-26, commit `6a7fcfe`)
+  - Yeni desteklenen ifadeler: "X gün/hafta/ay/yıl sonra", "X gün içinde", "gelecek/önümüzdeki pazartesi", "az sonra/birazdan" (+5 dk), "öğleden önce" (10), "ikindi" (16), "akşamüstü" (17), "yarından sonra" (öbür gün)
+  - Confidence iyileştirmesi: "akşam 8" / "saat 14" gibi implicit today saatlerinde artık `confident=true` (eski davranış: low badge + manuel düzeltme istiyordu)
+  - Bug fix: Türkçe sayılarla ("üç", "beş", "altı") shift çalışmıyordu — `\b` ASCII-only boundary "ü/ç/ğ" tanımıyordu; suffix `\s+` ile çözüldü
+  - TIME_WORDS uzun→kısa sıralı match: "öğleden sonra" "öğle"den önce match olsun
+  - `scripts/test-parser.ts` — 31 senaryolu regression smoke test
+  - **Edge Function redeploy edildi:** server-side parser de yeni
 
 ## Düzeltilen Buglar (bu oturumda)
 
@@ -219,6 +234,8 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] addContact void → string: yeni cari ID'si doğru döndürülüyor
 - [x] Edge Function auth: apikey + user JWT header'ları + --no-verify-jwt
 - [x] user_id eksikti: insert'lere user_id eklendi
+- [x] Parser: Türkçe karakterli sayı sözcükleriyle ("üç", "beş") tarih shift bug — `\b` ASCII boundary `ü/ç/ğ`'yi tanımıyordu, suffix `\s+` ile düzeltildi (commit `6a7fcfe`)
+- [x] Parser: implicit today saat ifadeleri ("akşam 8") low confidence yerine `confident=true` döndürüyor — gereksiz manuel düzeltme adımı kalktı (commit `6a7fcfe`)
 
 ---
 
@@ -253,12 +270,13 @@ OPENAI_API_KEY=sk-proj-xxx
 - [x] eas.json submit profile (track: internal, releaseStatus: draft)
 - [x] Data Safety referans dokümanı (docs/data-safety.md)
 - [x] Store listing copy TR + EN (docs/store-listing.md)
-- [ ] **ŞİMDİ:** Play Console'da app oluştur (`docs/play-runbook.md` Faz 1)
+- [x] Play Console'da app oluşturuldu — `Voicely AI — Sesli Hatırlatıcı` (2026-04-26)
+- [~] **ŞİMDİ:** Paket sahipliği doğrulama (yeni Google "Android geliştirici doğrulaması" politikası) — mevcut EAS APK'sı (`secrets/voicely-latest.apk`) Play Console'a upload edilecek; SHA-256 fingerprint zaten eşleşiyor (`8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12`)
 - [ ] Service account JSON üret + `secrets/google-play-service-account.json` konumuna koy
 - [x] versionCode yönetimi — EAS `appVersionSource: remote` + `autoIncrement: true` otomatik halleder (manuel güncelleme yok)
-- [ ] Production build (AAB): `eas build --platform android --profile production`
+- [ ] Production AAB build (Faz 10.1 dahil güncel kod): `eas build --platform android --profile production` — **EAS Free quota reset 2026-05-01'i bekliyor** (April quotası dolu)
 - [ ] Internal track upload: `eas submit --platform android --latest`
-- [ ] Store listing + Data Safety + Content Rating + Target Audience doldur
+- [ ] Store listing + Data Safety + Content Rating + Target Audience doldur (build gerektirmez, paralel yapılabilir)
 - [ ] Closed Testing track'e promote → 20 tester davet → 14 gün sayacı başlat
 - [ ] Production release → TR only → Review 1-3 gün
 
