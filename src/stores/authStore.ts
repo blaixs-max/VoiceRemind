@@ -1,13 +1,20 @@
 // src/stores/authStore.ts
-// Supabase Auth yönetimi — login, register, logout, session tracking
+// Supabase Auth + guest mode yönetimi.
+// Apple 5.1.1(v): login wall yasak → "Misafir Devam Et" girişi var.
+// Apple 5.1.1(v): hesap silme zorunlu → deleteAccount Edge Function çağrısı yapar.
 
 import { create } from 'zustand'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../utils/supabase'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../utils/config'
 import type { Session, User } from '@supabase/supabase-js'
+
+const GUEST_STORAGE_KEY = 'voicely.isGuest'
 
 type AuthState = {
   session: Session | null
   user: User | null
+  isGuest: boolean
   loading: boolean
   initialized: boolean
 
@@ -15,30 +22,46 @@ type AuthState = {
   signUp: (email: string, password: string) => Promise<string | null>
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
+  continueAsGuest: () => Promise<void>
+  exitGuest: () => Promise<void>
+  deleteAccount: () => Promise<string | null>
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
   session: null,
   user: null,
+  isGuest: false,
   loading: false,
   initialized: false,
 
   initialize: async () => {
     try {
-      // Mevcut session'ı kontrol et
-      const { data } = await supabase.auth.getSession()
+      const [{ data }, guestRaw] = await Promise.all([
+        supabase.auth.getSession(),
+        AsyncStorage.getItem(GUEST_STORAGE_KEY),
+      ])
+
+      // Session varsa guest bayrağını yok say (login öncelikli).
+      const hasSession = !!data.session
+      const isGuest = !hasSession && guestRaw === '1'
+
       set({
         session: data.session,
         user: data.session?.user ?? null,
+        isGuest,
         initialized: true,
       })
 
-      // Auth değişikliklerini dinle (token refresh, logout vs.)
       supabase.auth.onAuthStateChange((_event, session) => {
         set({
           session,
           user: session?.user ?? null,
+          // Login olunca guest bayrağı kalkar.
+          isGuest: session ? false : get().isGuest,
         })
+        if (session) {
+          AsyncStorage.removeItem(GUEST_STORAGE_KEY).catch(() => {})
+        }
       })
     } catch {
       set({ initialized: true })
@@ -50,7 +73,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) return error.message
-      return null // başarılı
+      return null
     } finally {
       set({ loading: false })
     }
@@ -61,7 +84,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) return error.message
-      return null // başarılı
+      return null
     } finally {
       set({ loading: false })
     }
@@ -75,6 +98,51 @@ export const useAuthStore = create<AuthState>()((set) => ({
     } catch (err) {
       console.warn('signOut remote error (lokal state yine de temizlenecek):', err)
     }
-    set({ session: null, user: null })
+    await AsyncStorage.removeItem(GUEST_STORAGE_KEY).catch(() => {})
+    set({ session: null, user: null, isGuest: false })
+  },
+
+  continueAsGuest: async () => {
+    await AsyncStorage.setItem(GUEST_STORAGE_KEY, '1').catch(() => {})
+    set({ isGuest: true, session: null, user: null })
+  },
+
+  exitGuest: async () => {
+    // Kullanıcı misafir modundan çıkmak isterse — login ekranına geri döner.
+    await AsyncStorage.removeItem(GUEST_STORAGE_KEY).catch(() => {})
+    set({ isGuest: false })
+  },
+
+  deleteAccount: async () => {
+    const { session } = get()
+    if (!session) return 'Oturum bulunamadı'
+
+    set({ loading: true })
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'Silme başarısız' }))
+        return body.error ?? `Silme başarısız (${res.status})`
+      }
+
+      // Hesap silindi — lokal state'i sıfırla. signOut çağırmıyoruz çünkü
+      // kullanıcı zaten yok, getSession 401 verir.
+      await supabase.auth.signOut().catch(() => {})
+      await AsyncStorage.removeItem(GUEST_STORAGE_KEY).catch(() => {})
+      set({ session: null, user: null, isGuest: false })
+      return null
+    } catch (err) {
+      return (err as Error).message ?? 'Beklenmeyen hata'
+    } finally {
+      set({ loading: false })
+    }
   },
 }))

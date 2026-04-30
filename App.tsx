@@ -20,6 +20,7 @@ import ContactDetailScreen from './src/screens/ContactDetailScreen'
 import ContactFormScreen from './src/components/ContactForm'
 import RemindersScreen from './src/screens/RemindersScreen'
 import ReminderEditScreen from './src/screens/ReminderEditScreen'
+import SettingsScreen from './src/screens/SettingsScreen'
 import { useAuthStore } from './src/stores/authStore'
 import { useReminderStore } from './src/stores/reminderStore'
 import { useContactStore } from './src/stores/contactStore'
@@ -100,21 +101,28 @@ function ContactsStackScreen() {
   )
 }
 
-// Ana uygulama — login sonrası gösterilir
+// Ana uygulama — login veya misafir modda gösterilir.
+// Apple 5.1.1(v): misafir modda da uygulamaya tam erişim var; account-based
+// özellikler (Cariler, sesli AI) ekran içinde feature-gate ediliyor.
 function MainApp() {
   const reconcile = useReminderStore((s) => s.reconcileNotifications)
   const fetchReminders = useReminderStore((s) => s.fetchReminders)
   const fetchContacts = useContactStore((s) => s.fetchContacts)
-  const signOut = useAuthStore((s) => s.signOut)
+  const isGuest = useAuthStore((s) => s.isGuest)
 
   useEffect(() => {
     // Bildirim izni iste
     Notifications.requestPermissionsAsync()
 
-    // Buluttan verileri çek
-    fetchContacts()
-    fetchReminders().then(() => reconcile())
-  }, [])
+    // Misafir modda Supabase fetch yapma (RLS 401 verir) — local store kullanılır.
+    if (!isGuest) {
+      fetchContacts()
+      fetchReminders().then(() => reconcile())
+    } else {
+      // Local AsyncStorage'dan reminder'ları yükle + reconcile et
+      fetchReminders().then(() => reconcile())
+    }
+  }, [isGuest])
 
   return (
     <Tab.Navigator
@@ -131,15 +139,6 @@ function MainApp() {
         headerTintColor: colors.primaryLight,
         headerShadowVisible: false,
         headerShown: true,
-        headerRight: () => (
-          <Ionicons
-            name="log-out-outline"
-            size={22}
-            color={colors.textOnDarkMuted}
-            style={{ marginRight: 16 }}
-            onPress={signOut}
-          />
-        ),
       }}
     >
       <Tab.Screen name="Panel" component={DashboardScreen} />
@@ -151,6 +150,11 @@ function MainApp() {
       <Tab.Screen
         name="Cariler"
         component={ContactsStackScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Ayarlar"
+        component={SettingsScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
@@ -174,6 +178,7 @@ export default function App() {
   const initialize = useAuthStore((s) => s.initialize)
   const initialized = useAuthStore((s) => s.initialized)
   const session = useAuthStore((s) => s.session)
+  const isGuest = useAuthStore((s) => s.isGuest)
 
   useEffect(() => {
     initialize()
@@ -199,7 +204,9 @@ export default function App() {
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <ErrorBoundary>
         <NavigationContainer theme={navTheme}>
-          {session ? <MainApp /> : <AuthScreen />}
+          {/* Apple 5.1.1(v): Login wall yok — misafir modda da MainApp render edilir.
+              Account-based özellikler (Cariler, voice AI) ekran içinde gate ediliyor. */}
+          {(session || isGuest) ? <MainApp /> : <AuthScreen />}
         </NavigationContainer>
         {/* Tüm uygulama için tek merkezi dialog host — Alert.alert/ActionSheetIOS yerine */}
         <DialogHost />

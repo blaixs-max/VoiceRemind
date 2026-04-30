@@ -11,15 +11,17 @@ import {
   StyleSheet,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useReminderStore } from '../stores/reminderStore'
 import { useContactStore } from '../stores/contactStore'
-import { colors, fontSize, fontWeight, spacing, radius, shadow } from '../utils/theme'
+import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients } from '../utils/theme'
 import type { Reminder } from '../models/types'
 import type { RemindersStackParamList } from '../navigation/types'
 import { dialog } from '../components/AppDialog'
+import ManualReminderForm from '../components/ManualReminderForm'
 
 type Nav = NativeStackNavigationProp<RemindersStackParamList, 'ReminderList'>
 
@@ -50,6 +52,7 @@ export default function RemindersScreen() {
   const [filter, setFilter] = useState<FilterMode>('pending')
   const [contactFilter, setContactFilter] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [manualFormVisible, setManualFormVisible] = useState(false)
 
   // Ekran saat başına kadar açık kalırsa grupları doğru tutmak için
   // 60 sn'de bir 'now' tick'i — useMemo bu tick'e bağlı olduğundan gece yarısı
@@ -359,7 +362,7 @@ export default function RemindersScreen() {
             : filter === 'important' ? 'Önemli işaretli hatırlatıcı yok'
             : 'Henüz hatırlatıcı eklenmemiş'}
           </Text>
-          <Text style={styles.emptyHint}>Kayıt ekranından sesli komut verin</Text>
+          <Text style={styles.emptyHint}>+ butonuyla manuel ekle ya da mikrofona basılı tut</Text>
         </View>
       ) : (
         <SectionList
@@ -382,6 +385,31 @@ export default function RemindersScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Manuel ekleme FAB — sağ alt, tab bar üstünde.
+          Apple 5.1.1(v): hem misafir hem login kullanıcı için login-bağımsız
+          hatırlatıcı oluşturma yolu. */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setManualFormVisible(true)}
+        activeOpacity={0.85}
+        accessibilityLabel="Manuel hatırlatıcı ekle"
+        accessibilityRole="button"
+      >
+        <LinearGradient
+          colors={gradients.mic as unknown as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabGradient}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <ManualReminderForm
+        visible={manualFormVisible}
+        onClose={() => setManualFormVisible(false)}
+      />
     </View>
   )
 }
@@ -632,5 +660,21 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
     color: colors.warning,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    // Tab bar (~80) + floating mic FAB clearance — sağ tarafta mic ile çakışmayacak konum
+    bottom: 110,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    ...shadow.glow('#7B61FF'),
+  },
+  fabGradient: {
+    flex: 1,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })

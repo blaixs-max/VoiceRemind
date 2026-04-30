@@ -12,6 +12,7 @@ import ConfirmationModal from './ConfirmationModal'
 import { dialog } from './AppDialog'
 import { useRecording } from '../hooks/useRecording'
 import { useParseAudio } from '../hooks/useParseAudio'
+import { useAuthStore } from '../stores/authStore'
 import { colors, fontSize, fontWeight } from '../utils/theme'
 
 // Tab ismi → icon eşlemesi (inactive/active state aynı isim, renk ile ayrılıyor)
@@ -23,6 +24,8 @@ const iconFor = (routeName: string): keyof typeof Ionicons.glyphMap => {
       return 'notifications-outline'
     case 'Cariler':
       return 'people-outline'
+    case 'Ayarlar':
+      return 'settings-outline'
     default:
       return 'ellipse-outline'
   }
@@ -30,6 +33,8 @@ const iconFor = (routeName: string): keyof typeof Ionicons.glyphMap => {
 
 export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
+  const isGuest = useAuthStore((s) => s.isGuest)
+  const exitGuest = useAuthStore((s) => s.exitGuest)
 
   // Mic state — global (her tab'dan tek kaynak)
   const { state: recState, durationMs, startRecording, stopRecording } = useRecording()
@@ -42,6 +47,25 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
       : parseState === 'sending'
       ? ('processing' as const)
       : ('idle' as const)
+
+  // Apple 5.1.1(v): Sesli komut Whisper+GPT bulutta çalışır → hesap zorunlu (core feature
+  // for personalized AI). Misafire bunu açıkça anlat, login'e yönlendir.
+  const handleMicLongPress = async () => {
+    if (isGuest) {
+      dialog.confirm({
+        title: 'Sesli Komut için Hesap Gerekli',
+        message:
+          'Sesli hatırlatıcı oluşturma OpenAI sunucularında işleniyor ve kişisel hesabınıza bağlı. Hesap açarak ücretsiz kullanmaya başlayabilirsiniz. Manuel hatırlatıcı eklemeye devam edebilirsiniz.',
+        confirmText: 'Hesap Aç / Giriş Yap',
+        cancelText: 'Vazgeç',
+        onConfirm: () => {
+          exitGuest()
+        },
+      })
+      return
+    }
+    await startRecording()
+  }
 
   const handlePressOut = async () => {
     if (recState !== 'recording') return
@@ -129,7 +153,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
           <MicButton
             state={displayState}
             durationMs={durationMs}
-            onLongPress={startRecording}
+            onLongPress={handleMicLongPress}
             onPressOut={handlePressOut}
             compact
           />

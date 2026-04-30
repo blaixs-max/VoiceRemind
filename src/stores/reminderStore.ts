@@ -1,10 +1,18 @@
 // src/stores/reminderStore.ts
-// Cloud-first hatırlatıcı store — Supabase CRUD + lokal notification lifecycle
+// Dual-mode reminder store:
+//   - Login: Supabase CRUD (cloud-first, RLS protected)
+//   - Misafir (Apple 5.1.1(v)): AsyncStorage local-only — cihazda kalıcı, sync yok
+//
+// Local notification lifecycle her iki modda aynı çalışır (expo-notifications).
 
 import { create } from 'zustand'
 import * as Notifications from 'expo-notifications'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../utils/supabase'
+import { useAuthStore } from './authStore'
 import type { Reminder } from '../models/types'
+
+const LOCAL_STORAGE_KEY = 'voicely.localReminders'
 
 type ReminderState = {
   reminders: Reminder[]
@@ -30,7 +38,6 @@ function rowToReminder(row: any): Reminder {
     contactId: row.contact_id,
     notificationId: row.notification_id,
     status: row.status,
-    // Migration henüz uygulanmadıysa kolon eksik olabilir → güvenli default
     isImportant: row.is_important ?? false,
     timezone: row.timezone,
     sourceText: row.source_text,
@@ -68,6 +75,33 @@ async function cancelNotification(notificationId: string) {
   await Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {})
 }
 
+// Misafir mod helper'ları — AsyncStorage I/O
+const isGuestMode = () => useAuthStore.getState().isGuest
+
+async function loadLocal(): Promise<Reminder[]> {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+async function saveLocal(reminders: Reminder[]) {
+  try {
+    await AsyncStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(reminders))
+  } catch {
+    // sessizce — bir sonraki write'da tekrar denenir
+  }
+}
+
+// UUID alternatifi — guest local id (uuid paketi kurulu değil)
+function localId(): string {
+  return `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
 export const useReminderStore = create<ReminderState>()((set, get) => ({
   reminders: [],
   loading: false,
@@ -75,6 +109,12 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
   fetchReminders: async () => {
     set({ loading: true })
     try {
+      if (isGuestMode()) {
+        const local = await loadLocal()
+        set({ reminders: local })
+        return
+      }
+
       const { data, error } = await supabase
         .from('reminders')
         .select('*')
@@ -89,7 +129,6 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
         if (r.status === 'pending' && !r.notificationId) {
           const notifId = await scheduleNotification(r.title, r.datetime, r.remindBefore)
           if (notifId) {
-            // Lokal state ve DB'de notification_id güncelle
             await supabase
               .from('reminders')
               .update({ notification_id: notifId })
@@ -111,14 +150,32 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
   },
 
   addReminder: async (data) => {
-    // Lokal bildirim schedule
     const notificationId = await scheduleNotification(data.title, data.datetime, data.remindBefore)
 
-    // Kullanıcı ID'sini al
+    if (isGuestMode()) {
+      const newReminder: Reminder = {
+        id: localId(),
+        title: data.title,
+        datetime: data.datetime,
+        remindBefore: data.remindBefore,
+        contactId: data.contactId,
+        notificationId,
+        status: data.status,
+        isImportant: data.isImportant ?? false,
+        timezone: data.timezone,
+        sourceText: data.sourceText,
+        confidence: data.confidence,
+        createdAt: new Date().toISOString(),
+      }
+      const next = [...get().reminders, newReminder]
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Oturum bulunamadı')
 
-    // Supabase'e kaydet
     const { data: rows, error } = await supabase
       .from('reminders')
       .insert({
@@ -138,7 +195,7 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
 
     if (error) throw error
     const newReminder = rowToReminder(rows![0])
-    newReminder.notificationId = notificationId // lokal ID
+    newReminder.notificationId = notificationId
 
     set((s) => ({ reminders: [...s.reminders, newReminder] }))
   },
@@ -147,7 +204,6 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
     const existing = get().reminders.find((r) => r.id === id)
     if (!existing) return
 
-    // Tarih değişmişse notification'ı yeniden schedule et
     let notificationId = existing.notificationId
     if (data.datetime && data.datetime !== existing.datetime) {
       await cancelNotification(existing.notificationId)
@@ -158,7 +214,15 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
       )
     }
 
-    // DB güncelle
+    if (isGuestMode()) {
+      const next = get().reminders.map((r) =>
+        r.id === id ? { ...r, ...data, notificationId } : r
+      )
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
+
     const updateData: Record<string, unknown> = {}
     if (data.title !== undefined) updateData.title = data.title
     if (data.datetime !== undefined) updateData.datetime = data.datetime
@@ -186,6 +250,13 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
     const existing = get().reminders.find((r) => r.id === id)
     if (existing) await cancelNotification(existing.notificationId)
 
+    if (isGuestMode()) {
+      const next = get().reminders.filter((r) => r.id !== id)
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
+
     const { error } = await supabase
       .from('reminders')
       .delete()
@@ -202,6 +273,15 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
     if (!existing) return
 
     await cancelNotification(existing.notificationId)
+
+    if (isGuestMode()) {
+      const next = get().reminders.map((r) =>
+        r.id === id ? { ...r, status: 'done' as const, notificationId: '' } : r
+      )
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
 
     const { error } = await supabase
       .from('reminders')
@@ -224,6 +304,15 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
       existing.title, existing.datetime, existing.remindBefore
     )
 
+    if (isGuestMode()) {
+      const next = get().reminders.map((r) =>
+        r.id === id ? { ...r, status: 'pending' as const, notificationId } : r
+      )
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
+
     const { error } = await supabase
       .from('reminders')
       .update({ status: 'pending', notification_id: notificationId })
@@ -240,6 +329,15 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
   markDismissed: async (id) => {
     const existing = get().reminders.find((r) => r.id === id)
     if (existing) await cancelNotification(existing.notificationId)
+
+    if (isGuestMode()) {
+      const next = get().reminders.map((r) =>
+        r.id === id ? { ...r, status: 'dismissed' as const, notificationId: '' } : r
+      )
+      set({ reminders: next })
+      await saveLocal(next)
+      return
+    }
 
     const { error } = await supabase
       .from('reminders')
@@ -260,19 +358,23 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
 
     const next = !existing.isImportant
 
-    // Optimistic update — UI anında tepki versin, DB arkada
+    // Optimistic update
     set((s) => ({
       reminders: s.reminders.map((r) =>
         r.id === id ? { ...r, isImportant: next } : r
       ),
     }))
 
+    if (isGuestMode()) {
+      await saveLocal(get().reminders)
+      return
+    }
+
     const { error } = await supabase
       .from('reminders')
       .update({ is_important: next })
       .eq('id', id)
 
-    // DB hatası varsa UI'yı geri al ki tutarsızlık olmasın
     if (error) {
       set((s) => ({
         reminders: s.reminders.map((r) =>
@@ -306,8 +408,23 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
       (r) => r.status === 'pending' && r.datetime < now
     )
 
+    if (isGuestMode()) {
+      if (overdue.length > 0) {
+        for (const r of overdue) {
+          await cancelNotification(r.notificationId)
+        }
+        const next = get().reminders.map((r) =>
+          r.status === 'pending' && r.datetime < now
+            ? { ...r, status: 'done' as const, notificationId: '' }
+            : r
+        )
+        set({ reminders: next })
+        await saveLocal(next)
+      }
+      return
+    }
+
     for (const r of overdue) {
-      // Hayalet bildirim bırakmamak için OS'taki schedule'ı iptal et
       await cancelNotification(r.notificationId)
       await supabase
         .from('reminders')

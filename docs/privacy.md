@@ -6,7 +6,7 @@ permalink: /privacy/
 
 # Voicely AI — Gizlilik Politikası
 
-**Son güncelleme:** 22 Nisan 2026
+**Son güncelleme:** 30 Nisan 2026
 
 Bu gizlilik politikası, Voicely AI uygulaması ("Uygulama", "biz") tarafından toplanan verilerin nasıl işlendiğini açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş sayılırsınız.
 
@@ -18,8 +18,10 @@ Voicely AI bireysel bir geliştirici tarafından geliştirilmektedir. Her türl�
 
 ## 2. Topladığımız Veriler
 
-### 2.1 Hesap Verileri
-Uygulamayı kullanabilmek için bir hesap oluşturmanız gerekir. Bu kapsamda:
+### 2.1 Hesap Verileri (opsiyonel)
+Uygulamayı **misafir modda hesap açmadan da** kullanabilirsiniz. Bu modda hatırlatıcılarınız yalnızca cihazınızda saklanır, sunucularımızla hiçbir veri paylaşılmaz.
+
+Bulut senkronizasyonu, sesli komut ve cari (CRM) yönetimi için ücretsiz hesap oluşturabilirsiniz. Hesap açtığınızda topladığımız veriler:
 - **E-posta adresi** — Kimlik doğrulama amacıyla
 - **Şifre** — Güvenli bir şekilde hash'lenmiş olarak saklanır (açık metin olarak tutulmaz)
 
@@ -76,6 +78,17 @@ OpenAI sunucularına gönderilen ses/metin verileri OpenAI'nin [kullanım politi
 - **Ses kayıtları** — İşlem biter bitmez silinir (saniyeler içinde)
 - **Hatırlatıcılar ve cariler** — Siz silene kadar saklanır
 - **Hesap bilgileri** — Hesabınızı sildiğiniz an tamamen silinir
+- **Misafir mod yerel verileri** — Cihazınızda saklanır; uygulamayı silerseniz kaybolur
+
+### 4.1 Hesap Silme (Apple App Store 5.1.1(v) uyumlu)
+
+Uygulamadan kendi hesabınızı silebilirsiniz: **Ayarlar → Hesabımı Sil**. Onayladığınızda:
+
+1. E-posta ve şifreniz Supabase Auth'tan kalıcı olarak silinir
+2. Tüm hatırlatıcılarınız ve cari kayıtlarınız veritabanından silinir (`ON DELETE CASCADE`)
+3. Yerel cihazınızdaki oturum bilgileri temizlenir
+
+İşlem geri alınamaz. Telefon veya e-posta yoluyla destek gerekmez — silme tamamen uygulama içinden gerçekleşir.
 
 ## 5. Haklarınız (KVKK / GDPR)
 

@@ -29,6 +29,7 @@ export default function AuthScreen() {
 
   const signIn = useAuthStore((s) => s.signIn)
   const signUp = useAuthStore((s) => s.signUp)
+  const continueAsGuest = useAuthStore((s) => s.continueAsGuest)
   const loading = useAuthStore((s) => s.loading)
 
   const handleSubmit = async () => {
@@ -188,6 +189,27 @@ export default function AuthScreen() {
             {isLogin ? 'Kayıt Ol' : 'Giriş Yap'}
           </Text>
         </TouchableOpacity>
+
+        {/* "Veya" ayırıcı */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>veya</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Apple 5.1.1(v): hesap olmadan da uygulamaya erişim — manuel hatırlatıcı +
+            lokal bildirimler. Sesli AI ve cari yönetimi hesap gerektirir. */}
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={continueAsGuest}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="person-outline" size={18} color={colors.textOnDark} />
+          <Text style={styles.guestText}>Misafir olarak devam et</Text>
+        </TouchableOpacity>
+        <Text style={styles.guestHint}>
+          Manuel hatırlatıcı oluşturup yerel bildirim alabilirsiniz. Sesli komut ve cari yönetimi için hesap gerekir.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   )
@@ -311,5 +333,47 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.primaryLight,
     fontWeight: fontWeight.bold,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.glassBorder,
+  },
+  dividerText: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  guestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    height: 50,
+    borderRadius: radius.lg,
+    backgroundColor: colors.glassFill,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  guestText: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.textOnDark,
+  },
+  guestHint: {
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    lineHeight: 16,
+    paddingHorizontal: spacing.md,
   },
 })

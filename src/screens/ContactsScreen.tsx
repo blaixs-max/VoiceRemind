@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useContactStore } from '../stores/contactStore'
+import { useAuthStore } from '../stores/authStore'
 import { dialog } from '../components/AppDialog'
 import { colors, fontSize, fontWeight, spacing, radius, shadow, gradients, getAvatarColor } from '../utils/theme'
 import type { Contact } from '../models/types'
@@ -28,7 +29,46 @@ export default function ContactsScreen() {
   const [search, setSearch] = useState('')
   const contacts = useContactStore((s) => s.contacts)
   const deleteContact = useContactStore((s) => s.deleteContact)
+  const isGuest = useAuthStore((s) => s.isGuest)
+  const exitGuest = useAuthStore((s) => s.exitGuest)
   const navigation = useNavigation<Nav>()
+
+  // Apple 5.1.1(v): Cari yönetimi cloud-bound CRM özelliği — bulut sync zorunlu.
+  // Misafir kullanıcıya feature gating ekranı göster (login wall değil, kullanıcı
+  // istediği zaman geri çıkabiliyor).
+  if (isGuest) {
+    return (
+      <View style={[styles.container, styles.lockContainer, { paddingTop: insets.top + spacing.xxl }]}>
+        <LinearGradient
+          colors={gradients.mic as unknown as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.emptyIconGradient}
+        >
+          <Ionicons name="people-outline" size={36} color={colors.white} />
+        </LinearGradient>
+        <Text style={styles.lockTitle}>Cari Yönetimi</Text>
+        <Text style={styles.lockHint}>
+          Müşteri ve firma kayıtları cihazlar arası senkron olur, hesap gerekir. Manuel hatırlatıcılarınız misafir modda da çalışmaya devam ediyor.
+        </Text>
+        <TouchableOpacity
+          style={styles.lockButton}
+          onPress={exitGuest}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={gradients.mic as unknown as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.lockButtonGradient}
+          >
+            <Ionicons name="log-in-outline" size={18} color={colors.white} />
+            <Text style={styles.lockButtonText}>Hesap Aç / Giriş Yap</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    )
+  }
 
   const filtered = useMemo(() => {
     if (!search.trim()) return contacts
@@ -268,5 +308,43 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  lockContainer: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+    gap: spacing.md,
+  },
+  lockTitle: {
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.heavy,
+    color: colors.textOnDark,
+    marginTop: spacing.sm,
+    letterSpacing: -0.5,
+  },
+  lockHint: {
+    fontSize: fontSize.md,
+    color: colors.textOnDarkSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  lockButton: {
+    borderRadius: radius.lg,
+    width: '100%',
+    ...shadow.glow('#7B61FF'),
+  },
+  lockButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    height: 52,
+    borderRadius: radius.lg,
+  },
+  lockButtonText: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+    letterSpacing: -0.2,
   },
 })

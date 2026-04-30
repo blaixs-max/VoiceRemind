@@ -4,6 +4,7 @@
 import { create } from 'zustand'
 import { supabase } from '../utils/supabase'
 import { useReminderStore } from './reminderStore'
+import { useAuthStore } from './authStore'
 import type { Contact, ContactSummary } from '../models/types'
 
 type ContactState = {
@@ -36,6 +37,11 @@ export const useContactStore = create<ContactState>()((set, get) => ({
   loading: false,
 
   fetchContacts: async () => {
+    // Misafir mod: cari Supabase-bound özellik. Local CRUD yok, fetch no-op.
+    if (useAuthStore.getState().isGuest) {
+      set({ contacts: [], loading: false })
+      return
+    }
     set({ loading: true })
     try {
       const { data, error } = await supabase
