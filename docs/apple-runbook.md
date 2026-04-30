@@ -387,4 +387,90 @@ Email: **"Your app has been approved"**
 
 ---
 
-*Bu runbook her Apple submission öncesi güncellenir. Son update: 2026-04-29 (v1.0 submission complete)*
+## 🚨 v1.0 Reject + v1.0.1 Resubmit Lessons (2026-04-30)
+
+**Reject:** Submission ID `ed0e119e-8f0b-4d3d-ba01-8b868b7dfce2`, **Guideline 5.1.1(v)** — iki ayrı sorun:
+1. **Account deletion eksik** — App hesap açmaya izin veriyor ama silme yolu yok (Apple zorunlu kılıyor)
+2. **Login wall yasağı** — Apps may not require users to enter personal information to function, except when directly relevant to core functionality
+
+**Tek günde fix + resubmit:** 2026-04-30 — kod yazımı + Edge Function deploy + smoke test + screen recording + Resolution Center reply.
+
+### 1. Account Deletion zorunluluğu (5.1.1(v))
+
+**Apple kuralı:**
+- Hesap açmaya izin veren her app **uygulama içinden** hesap silmeyi de sunmalı
+- "Sadece pasif hâle al" yetmez — gerçek silme olmalı
+- Telefon/email customer service zorunluluğu sadece "highly-regulated industries" için
+- Confirm dialog OK ama tek tıkla bitmemeli
+
+**Çözüm pattern (Supabase için):**
+- Client SDK'da self-delete API yok → service-role key ile **Edge Function** lazım
+- Edge Function: `auth.admin.deleteUser(user.id)` çağırır
+- DB tarafında `ON DELETE CASCADE` foreign key'lerle ilişkili kayıtlar otomatik silinir
+- Dosyalar: `supabase/functions/delete-account/index.ts` (yeni) + `authStore.deleteAccount()` (yeni method) + `SettingsScreen` (yeni ekran)
+- Privacy policy'de §4.1 "in-app account deletion" bölümü olmalı (promise/implementation parity)
+
+**Edge Function deploy yedek yolu:**
+- CLI 403 verirse (account/project mismatch) → Supabase Dashboard → Functions → "Deploy a new function" → "Via Editor" → kod yapıştır → "Verify JWT" KAPALI → Deploy
+- Health check: `curl POST https://<project>.supabase.co/functions/v1/delete-account` → beklenen: 401 + `{"error":"Yetkilendirme gerekli"}` (auth header yok mesajı)
+
+### 2. Login Wall yasağı (5.1.1(v))
+
+**Apple kuralı:**
+- "Apps may not require users to enter personal information to function, except when directly relevant to the core functionality"
+- AI/Voice processing tek başına "core functionality" sayılmıyor (Apple 2024+ daralttı)
+- Çözüm: **alternatif giriş yolu** sun (guest mode / anonymous)
+
+**Çözüm pattern (cloud-first app için):**
+- AsyncStorage'da `isGuest` flag tut (`voicely.isGuest = '1'`)
+- AuthScreen'e "Misafir olarak devam et" butonu ekle
+- App.tsx'te `(session || isGuest) ? MainApp : AuthScreen`
+- Store layer'da **dual-mode**: cloud Supabase OR AsyncStorage local fallback
+  - `isGuestMode()` helper → `useAuthStore.getState().isGuest`
+  - Her CRUD method'da if/else branch
+  - Cross-store reference için `getState()` (circular import'tan kaçınma)
+- Account-based feature'lar **gating** ile (block değil, prompt'la):
+  - Voice AI mic → "Sesli Komut için Hesap Gerekli" diyalogu + 1-tap exit-to-login
+  - CRM/Cariler tab → gradient lock screen + "Hesap Aç" CTA
+
+### 3. Resubmit pratikleri
+
+**ASC'de yeni version oluşturmadan resubmit:**
+- 1.0 Rejected sayfasında (`/distribution/ios/version/inflight`) Build alanından eski build'i kaldır → yeni Build'i ekle → Save → sağ üstte **"Update Review"** butonu → resubmit
+- Yeni version oluşturmaya gerek yok (1.0.1 etiketi sonraki update için saklanır)
+
+**Resolution Center reply:**
+- ASC → App Review → "Yesterday at X:XX | iOS 1.0 | Unresolved Issues" satırı → tıkla → submission detay → Reply textbox
+- Apple "Reply to this message in App Store Connect" diyor — **email reply yapma**, ASC içinden yaz
+- Notes'a Submission ID + build number + path-by-path açıklama yaz (yeni reviewer atanırsa context lazım)
+
+**Screen recording attachment:**
+- ASC App Review Information → Attachment tek dosya kabul eder (~50 MB)
+- Birden fazla video varsa: birini ASC'ye, diğerlerini **YouTube Unlisted/Public link** olarak Resolution Center reply'a yaz
+- Format: iPhone Photos screen recording → Mail kendine gönder → PC'ye indir → YouTube'a yükle → Reply'a embed
+- Apple reviewer YouTube linkini açıp izleyebilir, attachment limiti aşmasın
+
+**Reply format (kanıtlanmış kabul edici):**
+```
+Recording 1 - Account Deletion + post-deletion sign-in re-try (physical iPhone):
+https://www.youtube.com/shorts/<id>
+
+Recording 2 - Guest login + manual reminder creation (physical iPhone):
+https://www.youtube.com/shorts/<id>
+```
+
+### 4. Mimari tasarım dersi: cloud-first ≠ login-only
+
+- "Cloud-first" mimari (AsyncStorage persist kaldırılmış, her CRUD Supabase'e gider) **kötü değil** ama login wall kuralına çakılır
+- Çözüm: **dual-mode store** — `isGuest` branch + AsyncStorage fallback. Mevcut Supabase code'una dokunmadan paralel akış.
+- Pattern reusable: ileride **offline mode** için aynı dual-mode infrastructure kullanılır
+
+### 5. Privacy policy/implementation parity
+
+- Privacy policy'de "Hesabınızı sildiğiniz an tamamen silinir" yazıyorsa Apple bunu **kontrol eder**
+- Implementation eksikse iki katlı reject sebebi (5.1.1(v) + 5.1.1 promise gap)
+- Yeni feature eklerken privacy policy'yi mutlaka senkron güncelle (atomic commit ile)
+
+---
+
+*Bu runbook her Apple submission öncesi güncellenir. Son update: 2026-04-30 akşam (v1.0.1 resubmit)*

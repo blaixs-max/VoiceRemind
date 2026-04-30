@@ -3,11 +3,43 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
-## 🎯 Şu Anki Durum (Session Handoff — 2026-04-29 gece, **iOS Submit for Review COMPLETED**)
+## 🎯 Şu Anki Durum (Session Handoff — 2026-04-30 akşam, **iOS v1.0.1 RESUBMITTED for Apple 5.1.1(v) compliance fix**)
 
-**Son commit:** `fd07561` (origin/main ile senkron, sonraki commit runbook fix + app.json cleanup + handoff güncellemesi).
+**Son commit:** `2376d74` — `feat(auth): add account deletion + guest mode for Apple 5.1.1(v) compliance` (origin/main ile senkron, push yapıldı).
 
-### ✅ Tamamlanan Milestone'lar
+### 🔄 v1.0 Apple Reject (2026-04-29) → v1.0.1 Resubmit (2026-04-30)
+
+**Reject sebepleri (Submission ID `ed0e119e-8f0b-4d3d-ba01-8b868b7dfce2`):**
+1. Guideline 5.1.1(v) — Account deletion eksik
+2. Guideline 5.1.1(v) — Login wall yasağı (account-based olmayan feature'lar bile login'e kilitliydi)
+
+**Çözüm — tek günde fix + resubmit:**
+- ✅ **Edge Function `delete-account` deployed** (Supabase Dashboard manuel deploy — CLI 403 verdi). JWT verify + `auth.admin.deleteUser` + ON DELETE CASCADE. Health check 401 OK.
+- ✅ **Yeni `Ayarlar` (Settings) tab** (4. tab) — `Hesabımı Sil` (destructive confirm + Edge Function call) + `Çıkış Yap` + Privacy/Support linkler
+- ✅ **`Misafir olarak devam et` butonu** AuthScreen'de — login wall kaldırıldı
+- ✅ **`reminderStore` dual-mode** — login: Supabase (cloud-first), guest: AsyncStorage (`voicely.localReminders`). RLS 401 önlendi.
+- ✅ **Manuel hatırlatıcı (`+` FAB)** RemindersScreen'de — `ManualReminderForm` modal (title + DateTimePicker + remindBefore chips + opsiyonel contact picker)
+- ✅ **Cariler tab guest gating** — gradient lock screen + "Hesap Aç" CTA (login wall değil, feature gate)
+- ✅ **Mic guest gating** — CustomTabBar'da long-press: "Sesli Komut için Hesap Gerekli" diyalogu + "Hesap Aç / Giriş Yap"
+- ✅ **`privacy.md` updated** — §2.1 "hesap opsiyonel (misafir mod)" + §4.1 "in-app account deletion (5.1.1(v) uyumlu)"
+- ✅ **TypeScript clean** (`npx tsc --noEmit` exit 0), parser regression 21/21 PASS
+- ✅ **Build 4 (1.0.0)** EAS production, TestFlight Ready to Test
+- ✅ **iPhone smoke test PASS:** Test A (delete) + Test B (guest mode + Cariler lock) + Test C (manuel reminder + bildirim) + Test D (persistence)
+- ✅ **Screen recordings YouTube'da:**
+  - Recording 1 (Account Deletion + re-try): https://www.youtube.com/shorts/papb8rZSvSg
+  - Recording 2 (Guest Login + Manuel Reminder): https://www.youtube.com/shorts/run7qDlqcg4
+- ✅ **Resolution Center reply gönderildi** + iki YouTube linki + DEMO creds
+- ✅ **Update Review tıklandı** → status: Waiting for Review
+
+**Kalan Apple süreci:** 24-72h içinde "In Review" → onay/red. Email `noreply@email.apple.com` → `blaixs@gmail.com`.
+
+### 📦 v1.0.1 Code Changes (commit `2376d74`)
+
+12 dosya, +1368 / -42 satır:
+- **Yeni:** `supabase/functions/delete-account/index.ts`, `src/screens/SettingsScreen.tsx`, `src/components/ManualReminderForm.tsx`
+- **Modified:** `App.tsx` (4. tab + guest mode bypass), `src/stores/authStore.ts` (deleteAccount + isGuest), `src/stores/reminderStore.ts` (dual-mode), `src/stores/contactStore.ts` (guest no-op), `src/components/CustomTabBar.tsx` (mic guest gate + Ayarlar icon), `src/screens/AuthScreen.tsx` (Misafir butonu), `src/screens/ContactsScreen.tsx` (guest lock screen), `src/screens/RemindersScreen.tsx` (FAB + form integration), `docs/privacy.md`
+
+### ✅ Tamamlanan Milestone'lar (v1.0 öncesi)
 - Faz 1-10 + 10.1 tamamlandı (UI redesign + parser + Edge Function redeploy)
 - **Google Play Console hesabı:** onaylandı (2026-04-23)
 - **Google Play app oluşturuldu:** `Voicely AI — Sesli Hatırlatıcı` (2026-04-26)
@@ -61,26 +93,28 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - iPad screenshots generated: 2026-04-29 gece
 - All metadata + Submit for Review: 2026-04-29 gece (~24:00 yaklaşık)
 
-### ⚠️ Bilinen Sorunlar (1.0.1'de çözülecek)
+### ⚠️ Bilinen Sorunlar (sonraki sprint'e taşındı)
 
 #### 1. Description "Invalid Characters" — uzun versiyon kabul edilmedi
 - **Sorun:** Apple validator uzun emoji'li/em-dash'li/akıllı tırnaklı Description'a "This field contains one or more invalid characters" döndü
 - **Workaround:** Notepad'den geçirilmiş, emoji'siz, ASCII bullet (`-`), düz tırnak versiyonu submit edildi
 - **Kök sebep:** Browser clipboard'da kalmış zero-width characters / smart quotes / emoji placeholder bytes
-- **1.0.1 fix:** Notepad UTF-8 save → reload workflow ile uzun versiyonu yeniden hazırla, App Store'da Description güncelle (yeni binary gerektirmez, ama version update'le birlikte yapmak temiz)
+- **v1.0.2 fix:** Notepad UTF-8 save → reload workflow ile uzun versiyonu yeniden hazırla, App Store'da Description güncelle (yeni binary gerektirmez)
 
-#### 2. Manuel hatırlatıcı ekleme YOK
-- **Sorun:** Reviewer Türkçe dictation'a sahip değilse uygulamayı tam test edemez. Demo hesap pre-populated reminders ile fallback'i sağlar ama bu ideal değil.
-- **Risk:** Apple "Cannot evaluate functionality" diye reject edebilir (düşük olasılık çünkü Notes'ta açıklandı + populated demo)
-- **1.0.1 fix:** Reminders ekranına "+" FAB ekle → manuel form (title, datetime picker, optional contact). Sesli akış kalıcı, manuel ekleme yedek yol.
+#### 2. ~~Manuel hatırlatıcı ekleme YOK~~ — v1.0.1'de **ÇÖZÜLDÜ** ✅
+- `+` FAB + `ManualReminderForm` modal eklendi. Apple 5.1.1(v) login wall fix'inin parçası olarak yapıldı.
 
 #### 3. iPad screenshot'lar gerçek iPad UI'ı göstermiyor
-- **Sorun:** Generate edilen screenshot'lar iPhone PNG'lerin iPad canvas'a center-fit edilmiş hali. Apple kabul etti ama gerçekçi değil.
-- **1.0.1 fix:** macOS makinede iPad simulator'da gerçek UI'ı çek (eğer iPad layout'u gerçekten optimize edildiyse). Alternatif: `app.json`'da `supportsTablet: false` yap → iPad zorunluluğu kalkar (hedef kullanıcı zaten phone-first).
+- **Sorun:** Generate edilen screenshot'lar iPhone PNG'lerin iPad canvas'a center-fit edilmiş hali. Apple v1.0'da kabul etti ama gerçekçi değil.
+- **v1.0.2 fix:** macOS makinede iPad simulator'da gerçek UI'ı çek (eğer iPad layout'u gerçekten optimize edildiyse). Alternatif: `app.json`'da `supportsTablet: false` yap → iPad zorunluluğu kalkar (hedef kullanıcı zaten phone-first).
 
 #### 4. Sentry / crash reporting yok
 - **Sorun:** Production'da crash'ler görünmez. İlk kullanıcılar geldiğinde bug'lar kaybolur.
-- **1.0.1 fix:** `@sentry/react-native` entegrasyonu — `app.json` plugin + `App.tsx` Sentry.init() + `src/utils/errorReporting.ts` helper. DSN kullanıcı tarafından sentry.io'da yeni project oluşturulup alınacak. Auth flow'a `setUserContext` eklenecek (login/logout). Privacy: `beforeSend` callback ile audio file path'lerini filtrele.
+- **v1.0.2 fix (1.0.1 sprint'inde zaman yetmedi):** `@sentry/react-native` entegrasyonu — `app.json` plugin + `App.tsx` Sentry.init() + `src/utils/errorReporting.ts` helper. DSN kullanıcı tarafından sentry.io'da yeni project oluşturulup alınacak. Auth flow'a `setUserContext` eklenecek (login/logout). Privacy: `beforeSend` callback ile audio file path'lerini filtrele.
+
+#### 5. Misafir → login geçişinde local reminder'lar migrate edilmiyor
+- **Sorun:** Misafir modda AsyncStorage'da oluşturulan hatırlatıcılar, kullanıcı sonra hesap açtığında Supabase'e migrate edilmiyor (UX sorunu, Apple sormaz).
+- **v1.1 fix:** authStore'da `signIn`/`signUp` success'inde `reminderStore.migrateLocalToCloud()` çağrısı — AsyncStorage'daki tüm reminder'ları Supabase'e POST + AsyncStorage'ı temizle.
 
 ### 🤖 Android — EAS Quota Bekleme (reset 2026-05-01)
 
@@ -90,10 +124,10 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - **2026-05-01 quota reset →** `eas build --platform android --profile production` → AAB üretimi → `eas submit` → Closed Testing 14 gün → Production
 - **EAS server-side versionCode:** 3 (sonraki build code'u). Build day'i Sentry de eklenmiş olmalı (1.0.1 olarak hem iOS hem Android tek build sprint'i).
 
-### 🗓 Tahmini Yayın Tarihleri (Updated)
-- **iOS App Store v1.0:** ~2026-05-01/05-03 (Apple review 24-72h, submit edildi 2026-04-29)
+### 🗓 Tahmini Yayın Tarihleri (Updated 2026-04-30 akşam)
+- **iOS App Store v1.0.1:** ~2026-05-02/05-04 (Apple resubmit review 24-72h, resubmit edildi 2026-04-30)
 - **Google Play v1.0:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
-- **iOS + Android v1.0.1 (Sentry, manuel reminder, uzun desc):** ~2026-05-15-20
+- **iOS + Android v1.0.2 (Sentry, gerçek iPad screenshots, uzun desc):** ~2026-05-15-20
 
 ### 🔑 Önemli State Bilgileri
 - **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı)
@@ -104,6 +138,8 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - **Apple session cookie konumu:** `C:\Users\hasan\.app-store\auth\blaixs@gmail.com\cookie` (~30 gün geçerli, expire olursa eas build/submit yeniden 2FA ister)
 - **iOS buildNumber kaynağı:** `appVersionSource: remote` (eas.json) → server-side autoIncrement, app.json'dan `buildNumber` field kaldırıldı
 - **Tunnel/tester paylaşım:** ngrok v3.38.0 binary swap edildi (`%APPDATA%\npm\node_modules\@expo\ngrok\node_modules\@expo\ngrok-bin-win32-x64\ngrok.exe`)
+- **Edge Function deploy yedek yolu:** Supabase CLI 403 verdiğinde Dashboard üzerinden manuel deploy edilebilir (Functions → Deploy a new function → Via Editor). Kod kopyala-yapıştır + "Verify JWT" KAPALI bırak (--no-verify-jwt eşdeğeri).
+- **v1.0.1 build state:** EAS Build 4 (1.0.0), TestFlight'ta Ready to Test, ASC'de 1.0 Rejected sayfasına atandı. Resolution Center reply gönderildi (YouTube linkler), Update Review tıklandı.
 
 ---
 
