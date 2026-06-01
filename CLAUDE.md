@@ -81,6 +81,25 @@ Yayın özeti sayfasından "12 değişikliği yayınla" butonuna basıldı. List
 - Onay mail'i: `noreply@google.com` → `blaixs@gmail.com`
 - Onay sonrası test linki aktif olur, testerlara gönderilir, 14 gün sayacı başlar
 
+### 🚨 INCIDENT (2026-06-01): iOS Production Network Failure
+
+**Belirti:** Kullanıcı iOS production app'i açtı, "Network Request Failed" hatası.
+
+**Kök neden:** Supabase Free tier projesi 1 hafta inaktivite sonrası **auto-pause** olmuş. DNS bile resolve etmiyordu (`Non-existent domain`).
+
+**Çözüm (manuel + otomatik):**
+1. **Anında fix:** Kullanıcı Supabase Dashboard'dan projeyi restore etti → iOS app tekrar bağlandı
+2. **Önleyici tedbir:** GitHub Actions cron workflow eklendi (commit `ac32c2d`)
+   - Dosya: `.github/workflows/supabase-keep-alive.yml`
+   - Schedule: `'0 12 * * 2,5'` (Salı + Cuma 12:00 UTC)
+   - Pings: `/auth/v1/health` + `/rest/v1/reminders?limit=1` + Edge Functions OPTIONS
+   - Manuel trigger: `gh workflow run supabase-keep-alive.yml`
+   - Test edildi: 3 başarılı run, hepsi yeşil ✅
+
+**İlk denenen endpoint hatası:** `/rest/v1/` root endpoint **secret API key** istiyor (401 "Secret API key required"). Düzeltme: RLS-protected table query (`/rest/v1/reminders?limit=1`) + `/auth/v1/health` ile değiştirildi, ikisi de publishable anon key ile 200 dönüyor.
+
+**Uzun vadeli öneri:** Production'a geçince Supabase **Pro plan ($25/ay)** önerilir — auto-pause yok, 8GB DB, daily backups, 100GB bandwidth. Free tier şimdilik yeterli ama Play Store launch sonrası kullanıcı sayısı artarsa upgrade.
+
 ### 📦 v1.0.1 Code Changes (commit `2376d74`)
 
 12 dosya, +1368 / -42 satır:
@@ -205,6 +224,9 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - `git status` → "working tree clean" + "Your branch is up to date"
 - `git log -1` lokal hash = `git ls-remote origin main` remote hash
 - Push edilmemiş commit varsa önce push; remote'ta yeni varsa önce pull; divergent ise sor.
+
+### 🤖 CI/CD Workflows (.github/workflows/)
+- **`supabase-keep-alive.yml`** — Supabase Free tier auto-pause önleyici cron (Salı+Cuma 12:00 UTC), `/auth/v1/health` + `/rest/v1/reminders?limit=1` + Edge Functions OPTIONS ping. Manuel trigger: `gh workflow run supabase-keep-alive.yml`. Eklenen tarih: 2026-06-01 (incident sonrası önleyici tedbir).
 
 ---
 
