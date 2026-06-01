@@ -12,27 +12,28 @@ Bu doküman Play Console hesabı onaylandığı andan **Closed Testing track'ın
 
 ---
 
-## 📍 Mevcut Durum (2026-04-29 gece)
+## 📍 Mevcut Durum (2026-05-04 — Internal Testing'e AAB yüklendi)
 
 - ✅ Play Console hesabı onaylandı (2026-04-23)
-- ✅ Play Console app oluşturuldu (`Voicely AI — Sesli Hatırlatıcı`, 2026-04-26)
 - ✅ Privacy Policy URL canlı: https://blaixs-max.github.io/VoiceRemind/privacy/
-- ⏸ **EAS Free quota dolu** — Android production AAB build için **2026-05-01 reset** bekleniyor
-- 📦 **iOS App Store v1.0** zaten **Submit for Review** edildi (2026-04-29 gece) — Apple review 24-72h
-- 🎯 **1 Mayıs sabahı:** EAS quota açılınca `eas build --platform android --profile production` → AAB → `eas submit`
+- ✅ **Faz 1.5 (paket sahipliği doğrulaması)** TAMAMLANDI — Google'ın yeni token-based flow'u ile (`plugins/withAdiRegistration.js`, token `DIOKKK6FM5PKGAAAAAAAAAAAAA` APK'ya gömüldü), `com.blaixs.VoiceRemind` "Kayıtlı" statüsünde
+- ✅ **Faz 1 (app create)** TAMAMLANDI — Voicely AI app yeniden oluşturuldu (eski app yeni policy ile silinmişti), yeni internal ID `4972471939058285799`
+- ✅ **Faz 2 (Service Account JSON)** TAMAMLANDI — `secrets/google-play-service-account.json` mevcut, Google Cloud project `eas-submit-voicely` (numeric `435290266485`), Google Play Android Developer API enabled
+- ✅ **Service account Play Console'da invite edildi** — Yeni redesign'da "Setup → API access" KALDIRILDI, artık "Kullanıcılar ve izinler → Yeni kullanıcılar davet et"'ten ekleniyor. App permissions: Voicely AI için Yönetici (13 izin). Account permissions boş bırakıldı (least-privilege).
+- ✅ **Faz 3 (Production AAB build)** TAMAMLANDI — versionCode 4, https://expo.dev/artifacts/eas/tmbyQJoKYVRPT86STzqfVv.aab
+- ✅ **Faz 4 (eas submit Internal Testing'e)** TAMAMLANDI — DRAFT release görünmeli, Submission URL: https://expo.dev/accounts/blaixs/projects/VoiceRemind/submissions/425836bd-ef50-4497-a211-9dbaa7754f26
+- ⏸ **Faz 5-9 (Formlar)** YAPILMADI — Store listing, Data Safety, Content Rating, Target Audience, App Content checklist
+- ⏸ **Faz 10 (Closed Testing 14 gün)** BAŞLAMADI
+- ⏸ **Faz 11 (Production Turkey-only)** BAŞLAMADI
 
-### Bu süreyi değerlendirme önerileri (build olmadan paralel):
-1. **Store Listing** (Faz 5) — copy `docs/store-listing.md`'den (uzun versiyon Google Play'de **invalid characters** sorunu yapmaz, rahatça yapıştır)
-2. **Data Safety** (Faz 6) — `docs/data-safety.md`'deki cevapları doldur
-3. **Content Rating questionnaire** (Faz 7) — Apple Age Rating'e benzer, hepsi None/No → IARC etiketi
-4. **Target Audience** (Faz 8) — 18+ adults
-5. **Service Account JSON** üret (`secrets/google-play-service-account.json`) — Faz 2
-6. **Paket sahipliği doğrulaması** — `secrets/voicely-latest.apk`'yı Internal Testing'e upload (SHA-256 zaten eşleşti: `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12`)
+### Sıradaki adımlar (kullanıcı manuel)
+1. Faz 5-9: Play Console formları (~1 saat, paralel doldurulabilir)
+2. Faz 10: Closed Testing track + 20 tester + 14 gün
+3. Faz 11: Production release Turkey-only, review 1-3 gün
 
-### Sentry entegrasyonu (1.0.1 ile birlikte gelecek)
-- Mayıs 1 build'inde **hem Android hem iOS** için Sentry entegre edilmiş kod kullanılacak
-- iOS için bu **v1.0.1** olarak yeni bir Apple submission (review tekrar)
-- Detay: `CLAUDE.md` → "Bilinen Sorunlar (1.0.1'de çözülecek)" → Sentry kurulum planı
+### Sentry entegrasyonu (v1.0.2 sprint'i — Android production yayınlandıktan sonra)
+- Hem Android hem iOS için ortak v1.0.2 build
+- Detay: `CLAUDE.md` → "Bilinen Sorunlar"
 
 ---
 

@@ -3,35 +3,41 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
-## 🎯 Şu Anki Durum (Session Handoff — 2026-04-30 akşam, **iOS v1.0.1 RESUBMITTED for Apple 5.1.1(v) compliance fix**)
+## 🎯 Şu Anki Durum (Session Handoff — 2026-05-04 akşam, **iOS v1.0.1 LIVE on App Store + Android v1.0 SUBMITTED to Play Console Internal Testing**)
 
-**Son commit:** `2376d74` — `feat(auth): add account deletion + guest mode for Apple 5.1.1(v) compliance` (origin/main ile senkron, push yapıldı).
+**Son commit:** `2c1b0da` — `feat(android): add adi-registration plugin for Play Console package verification` (origin/main ile senkron, push yapıldı).
 
-### 🔄 v1.0 Apple Reject (2026-04-29) → v1.0.1 Resubmit (2026-04-30)
+### ✅ iOS App Store v1.0.1 — YAYINDA
+Apple v1.0.1 onayladı, App Store'da canlı. Description uzun versiyon güncellendi, iPad screenshots gerçek versiyonlarla değiştirildi (kullanıcı manuel hallettiği için v1.0.2 sprint'i hafifledi).
 
-**Reject sebepleri (Submission ID `ed0e119e-8f0b-4d3d-ba01-8b868b7dfce2`):**
-1. Guideline 5.1.1(v) — Account deletion eksik
-2. Guideline 5.1.1(v) — Login wall yasağı (account-based olmayan feature'lar bile login'e kilitliydi)
+### 🤖 Android Play Console v1.0 — INTERNAL TESTING'TE (2026-05-04)
 
-**Çözüm — tek günde fix + resubmit:**
-- ✅ **Edge Function `delete-account` deployed** (Supabase Dashboard manuel deploy — CLI 403 verdi). JWT verify + `auth.admin.deleteUser` + ON DELETE CASCADE. Health check 401 OK.
-- ✅ **Yeni `Ayarlar` (Settings) tab** (4. tab) — `Hesabımı Sil` (destructive confirm + Edge Function call) + `Çıkış Yap` + Privacy/Support linkler
-- ✅ **`Misafir olarak devam et` butonu** AuthScreen'de — login wall kaldırıldı
-- ✅ **`reminderStore` dual-mode** — login: Supabase (cloud-first), guest: AsyncStorage (`voicely.localReminders`). RLS 401 önlendi.
-- ✅ **Manuel hatırlatıcı (`+` FAB)** RemindersScreen'de — `ManualReminderForm` modal (title + DateTimePicker + remindBefore chips + opsiyonel contact picker)
-- ✅ **Cariler tab guest gating** — gradient lock screen + "Hesap Aç" CTA (login wall değil, feature gate)
-- ✅ **Mic guest gating** — CustomTabBar'da long-press: "Sesli Komut için Hesap Gerekli" diyalogu + "Hesap Aç / Giriş Yap"
-- ✅ **`privacy.md` updated** — §2.1 "hesap opsiyonel (misafir mod)" + §4.1 "in-app account deletion (5.1.1(v) uyumlu)"
-- ✅ **TypeScript clean** (`npx tsc --noEmit` exit 0), parser regression 21/21 PASS
-- ✅ **Build 4 (1.0.0)** EAS production, TestFlight Ready to Test
-- ✅ **iPhone smoke test PASS:** Test A (delete) + Test B (guest mode + Cariler lock) + Test C (manuel reminder + bildirim) + Test D (persistence)
-- ✅ **Screen recordings YouTube'da:**
-  - Recording 1 (Account Deletion + re-try): https://www.youtube.com/shorts/papb8rZSvSg
-  - Recording 2 (Guest Login + Manuel Reminder): https://www.youtube.com/shorts/run7qDlqcg4
-- ✅ **Resolution Center reply gönderildi** + iki YouTube linki + DEMO creds
-- ✅ **Update Review tıklandı** → status: Waiting for Review
+**Bugünkü oturumda yapılanlar (özet):**
+1. **EAS CLI global kuruldu** (`npm install -g eas-cli`, v18.10.0)
+2. **Production AAB build** çekildi (commit `30155ef` ile, ~50 dk queue + 4 dk compile) → URL: https://expo.dev/artifacts/eas/tmbyQJoKYVRPT86STzqfVv.aab
+3. **Google Cloud project `eas-submit-voicely`** oluşturuldu (project ID `eas-submit-voicely`, numeric `435290266485`)
+4. **Service account** `eas-submit@eas-submit-voicely.iam.gserviceaccount.com` oluşturuldu, JSON key indirildi → `secrets/google-play-service-account.json`
+5. **Google'ın yeni paket sahipliği doğrulama akışına takılındı** (Android Developer Verification 2025 policy):
+   - Eski APK ile upload denendi → "required token file missing" hatası
+   - Açıklamalı doğrulama akışı için **Expo config plugin yazıldı**: `plugins/withAdiRegistration.js` (commit `2c1b0da`)
+   - Token `DIOKKK6FM5PKGAAAAAAAAAAAAA` `assets/adi-registration.properties`'e gömüldü
+   - Yeni APK build edildi → Play Console'a upload → **paket sahipliği "Kayıtlı"** statüsüne geçti
+6. **Voicely AI app'i Play Console'da yeniden oluşturuldu** (yeni internal app ID `4972471939058285799` — eski 04-26'da yapılan kayıt yeni policy nedeniyle silinmişti)
+7. **Service account "Kullanıcılar ve izinler" üzerinden invite edildi** (yeni redesign: ayrı "API access" sayfası kaldırılmış, Users tab'a entegre)
+   - App permissions: Voicely AI için Yönetici (tüm 13 izin)
+   - Account permissions: boş (least-privilege)
+8. **Google Play Android Developer API** Cloud Console'da etkinleştirildi (`androidpublisher.googleapis.com`, ilk submit denemesinde PERMISSION_DENIED uyarısı geldi)
+9. **`eas submit --platform android --latest`** başarılı → AAB Internal Testing track'a yüklendi (DRAFT release)
 
-**Kalan Apple süreci:** 24-72h içinde "In Review" → onay/red. Email `noreply@email.apple.com` → `blaixs@gmail.com`.
+**Submission detayları:**
+- Build ID: `dd782181-3995-49f2-b906-0c1102708bc7`
+- App version: 1.0.0, versionCode: **4** (server-side autoIncrement 3→4)
+- Track: internal, releaseStatus: DRAFT
+- Submission URL: https://expo.dev/accounts/blaixs/projects/VoiceRemind/submissions/425836bd-ef50-4497-a211-9dbaa7754f26
+
+### 📦 Yeni Eklenen Dosyalar (commit `2c1b0da`)
+- `plugins/withAdiRegistration.js` — Google package verification için config plugin (Expo `withDangerousMod`)
+- `app.json` — plugin referansı eklendi (`./plugins/withAdiRegistration` + token argument)
 
 ### 📦 v1.0.1 Code Changes (commit `2376d74`)
 
@@ -116,30 +122,51 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - **Sorun:** Misafir modda AsyncStorage'da oluşturulan hatırlatıcılar, kullanıcı sonra hesap açtığında Supabase'e migrate edilmiyor (UX sorunu, Apple sormaz).
 - **v1.1 fix:** authStore'da `signIn`/`signUp` success'inde `reminderStore.migrateLocalToCloud()` çağrısı — AsyncStorage'daki tüm reminder'ları Supabase'e POST + AsyncStorage'ı temizle.
 
-### 🤖 Android — EAS Quota Bekleme (reset 2026-05-01)
+### 🤖 Android — Internal Testing Track'a Yüklendi → Sıradaki Adımlar
 
-- Faz 1.5: `secrets/voicely-latest.apk`'yı Play Console "APK yükle" ile upload (paket sahipliği doğrulaması). SHA-256 zaten eşleşti (`8E:87:57:A1:01...`).
-- Faz 2: Service account JSON üret → `secrets/google-play-service-account.json`'a koy
-- Faz 5-9: Store listing + Data Safety + Content Rating + Target Audience formları (build gerekmez, paralel doldurulabilir — kaynak: `docs/store-listing.md` + `docs/data-safety.md`)
-- **2026-05-01 quota reset →** `eas build --platform android --profile production` → AAB üretimi → `eas submit` → Closed Testing 14 gün → Production
-- **EAS server-side versionCode:** 3 (sonraki build code'u). Build day'i Sentry de eklenmiş olmalı (1.0.1 olarak hem iOS hem Android tek build sprint'i).
+**ŞU ANKİ STATÜ:** AAB DRAFT olarak Internal Testing'te. Play Console formları henüz dolmadı, Closed Testing'e promote etmek için form'lar şart.
 
-### 🗓 Tahmini Yayın Tarihleri (Updated 2026-04-30 akşam)
-- **iOS App Store v1.0.1:** ~2026-05-02/05-04 (Apple resubmit review 24-72h, resubmit edildi 2026-04-30)
-- **Google Play v1.0:** ~2026-05-15 (May 1 build → Closed Testing 14 gün → Review 1-3 gün)
-- **iOS + Android v1.0.2 (Sentry, gerçek iPad screenshots, uzun desc):** ~2026-05-15-20
+**Sırasıyla yapılacaklar:**
+1. **Play Console formlarını doldur** (build gerekmez, ~1 saat):
+   - Store listing — kaynak: `docs/store-listing.md`
+   - Data Safety — kaynak: `docs/data-safety.md`
+   - Content Rating (IARC) — questionnaire, hepsi No → 4+
+   - Target Audience — 13-15, 16-17, 18+
+   - App Content checklist — Privacy/Ads/Health/Government/Financial vs.
+   - App access — login required + reviewer creds (`blaixs+reviewer@gmail.com` / `Reviewer2026!`)
+2. **Internal Testing release'i "Review" durumuna geçir** (DRAFT'tan çıkar — opsiyonel kontrol amaçlı)
+3. **Closed Testing track oluştur ve release'i promote et**
+4. **20 tester topla + email list'e ekle** (aile/arkadaş/Discord/Twitter/r/Turkey)
+5. **14 gün kesintisiz test** (her tester en az 1 kez app'i açmalı)
+6. **Production'a promote** → Turkey only → Review 1-3 gün
+7. **Production yayın** → Play Store'da arama: "Voicely AI"
+
+### 🗓 Tahmini Yayın Tarihleri (Updated 2026-05-04)
+- **iOS App Store v1.0.1:** ✅ YAYINDA
+- **Google Play v1.0:** Internal Testing'te (2026-05-04) → formlar (1-3 gün) → Closed Testing 14 gün → Review 1-3 gün → **Tahmini production: ~2026-05-22 ± 3 gün**
+- **v1.0.2 sprint (Sentry):** Android production yayınlandıktan sonra ele alınır, ~2026-05-25-06-01
+- **v1.1 sprint (reminder migration + monetization):** Haziran ortası
 
 ### 🔑 Önemli State Bilgileri
-- **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı)
-- **EAS Android versionCode:** 3 (sonraki build)
+- **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı, "Kayıtlı" statüsünde)
+- **EAS Android versionCode:** 4 (Internal Testing'teki current), 5 sonraki build
+- **Google Cloud project:** `eas-submit-voicely` (numeric ID `435290266485`, Google Play Android Developer API ENABLED)
+- **Service account:** `eas-submit@eas-submit-voicely.iam.gserviceaccount.com` (JSON: `secrets/google-play-service-account.json`, Play Console'da Voicely AI için Yönetici)
+- **Play Console developer ID:** `5418024835905394928`
+- **Play Console app ID (yeni):** `4972471939058285799` (Voicely AI — Sesli Hatırlatıcı)
+- **Package verification token:** `DIOKKK6FM5PKGAAAAAAAAAAAAA` (commit `2c1b0da` ile `app.json` plugin args'a gömülü, asset olarak APK'lara gider)
 - **Apple ASC App ID:** `6764582214`
 - **Apple Team ID:** `XRUJLSF5J9` (Fevzi Emrah Atabek, Individual)
 - **Apple Distribution Cert exp:** 2027-04-29 (1 yıl sonra rotate gerekli — EAS otomatik halleder)
 - **Apple session cookie konumu:** `C:\Users\hasan\.app-store\auth\blaixs@gmail.com\cookie` (~30 gün geçerli, expire olursa eas build/submit yeniden 2FA ister)
 - **iOS buildNumber kaynağı:** `appVersionSource: remote` (eas.json) → server-side autoIncrement, app.json'dan `buildNumber` field kaldırıldı
-- **Tunnel/tester paylaşım:** ngrok v3.38.0 binary swap edildi (`%APPDATA%\npm\node_modules\@expo\ngrok\node_modules\@expo\ngrok-bin-win32-x64\ngrok.exe`)
 - **Edge Function deploy yedek yolu:** Supabase CLI 403 verdiğinde Dashboard üzerinden manuel deploy edilebilir (Functions → Deploy a new function → Via Editor). Kod kopyala-yapıştır + "Verify JWT" KAPALI bırak (--no-verify-jwt eşdeğeri).
-- **v1.0.1 build state:** EAS Build 4 (1.0.0), TestFlight'ta Ready to Test, ASC'de 1.0 Rejected sayfasına atandı. Resolution Center reply gönderildi (YouTube linkler), Update Review tıklandı.
+
+### 🔒 Senkronizasyon Kuralı (2026-05-04 belirlendi)
+**Build/submit/deploy öncesi GitHub remote ile lokal proje %100 senkronize olmalı.** Memory'de kayıtlı: `~/.claude/projects/.../memory/feedback_github_local_sync.md`. Pratik:
+- `git status` → "working tree clean" + "Your branch is up to date"
+- `git log -1` lokal hash = `git ls-remote origin main` remote hash
+- Push edilmemiş commit varsa önce push; remote'ta yeni varsa önce pull; divergent ise sor.
 
 ---
 
