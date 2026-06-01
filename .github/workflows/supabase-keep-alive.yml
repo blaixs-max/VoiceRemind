@@ -29,35 +29,36 @@ jobs:
       SUPABASE_ANON_KEY: sb_publishable_weQnIg1g5Ru1RN0Dl__nwA_hOw4zkmS
 
     steps:
-      - name: Ping REST API
+      - name: Ping Auth health
         run: |
-          echo "Pinging Supabase REST API..."
-          response=$(curl -s -o /tmp/rest_body -w "%{http_code}" \
-            "${SUPABASE_URL}/rest/v1/" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            --max-time 30)
-          echo "REST API response: HTTP $response"
-          if [ "$response" != "200" ] && [ "$response" != "404" ]; then
-            echo "❌ REST API beklenmeyen status: $response"
-            cat /tmp/rest_body
-            exit 1
-          fi
-          echo "✅ REST API aktif"
-
-      - name: Ping Auth endpoint
-        run: |
-          echo "Pinging Supabase Auth..."
+          echo "Pinging Supabase Auth health endpoint..."
           response=$(curl -s -o /tmp/auth_body -w "%{http_code}" \
             "${SUPABASE_URL}/auth/v1/health" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             --max-time 30)
-          echo "Auth response: HTTP $response"
+          echo "Auth health: HTTP $response"
           if [ "$response" != "200" ]; then
-            echo "⚠️  Auth beklenmeyen status: $response (REST API çalışıyorsa kritik değil)"
+            echo "❌ Auth health beklenmeyen status: $response"
             cat /tmp/auth_body
-          else
-            echo "✅ Auth aktif"
+            exit 1
           fi
+          echo "✅ Auth aktif"
+
+      - name: Ping REST API (RLS-protected table query)
+        run: |
+          echo "Pinging REST API via RLS table query (aktivite sayar)..."
+          response=$(curl -s -o /tmp/rest_body -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/reminders?limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            --max-time 30)
+          echo "REST API response: HTTP $response"
+          # 200 = OK (RLS boş array döner — auth yok), 401/403 = auth issue, 5xx = DB sorunu
+          if [ "$response" != "200" ]; then
+            echo "❌ REST API beklenmeyen status: $response"
+            cat /tmp/rest_body
+            exit 1
+          fi
+          echo "✅ REST API + Postgres aktif"
 
       - name: Ping Edge Functions (OPTIONS)
         run: |
