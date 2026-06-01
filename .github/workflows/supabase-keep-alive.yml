@@ -1,0 +1,102 @@
+name: Supabase Keep-Alive
+
+# Supabase Free tier projeleri 1 hafta inaktivite sonrası auto-pause oluyor.
+# Bu workflow REST API + Edge Function'lara periyodik ping atarak aktiviteyi canlı tutar.
+# Çalışma sıklığı: haftada 2 kez (Salı + Cuma, 12:00 UTC) — 1 hafta limitinin altında güvenli marj.
+
+on:
+  schedule:
+    # Cron: dakika saat gün-ay ay haftanın-günü
+    # Salı + Cuma 12:00 UTC
+    - cron: '0 12 * * 2,5'
+  # Manual tetikleme imkanı (Actions tab → Run workflow)
+  workflow_dispatch:
+
+# Sadece bir tane workflow aynı anda çalışsın (race condition önle)
+concurrency:
+  group: supabase-keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      SUPABASE_URL: https://dtepkruumsxlflyzfeut.supabase.co
+      # Publishable anon key — client-side için tasarlanmış, RLS koruyor, exposed olması OK
+      SUPABASE_ANON_KEY: sb_publishable_weQnIg1g5Ru1RN0Dl__nwA_hOw4zkmS
+
+    steps:
+      - name: Ping REST API
+        run: |
+          echo "Pinging Supabase REST API..."
+          response=$(curl -s -o /tmp/rest_body -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            --max-time 30)
+          echo "REST API response: HTTP $response"
+          if [ "$response" != "200" ] && [ "$response" != "404" ]; then
+            echo "❌ REST API beklenmeyen status: $response"
+            cat /tmp/rest_body
+            exit 1
+          fi
+          echo "✅ REST API aktif"
+
+      - name: Ping Auth endpoint
+        run: |
+          echo "Pinging Supabase Auth..."
+          response=$(curl -s -o /tmp/auth_body -w "%{http_code}" \
+            "${SUPABASE_URL}/auth/v1/health" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            --max-time 30)
+          echo "Auth response: HTTP $response"
+          if [ "$response" != "200" ]; then
+            echo "⚠️  Auth beklenmeyen status: $response (REST API çalışıyorsa kritik değil)"
+            cat /tmp/auth_body
+          else
+            echo "✅ Auth aktif"
+          fi
+
+      - name: Ping Edge Functions (OPTIONS)
+        run: |
+          echo "Pinging parse-reminder Edge Function (OPTIONS preflight)..."
+          response=$(curl -s -o /tmp/parse_body -w "%{http_code}" \
+            "${SUPABASE_URL}/functions/v1/parse-reminder" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -X OPTIONS \
+            --max-time 30)
+          echo "parse-reminder OPTIONS: HTTP $response"
+          # OPTIONS preflight 200 veya 204 dönmeli (CORS)
+          if [ "$response" != "200" ] && [ "$response" != "204" ]; then
+            echo "⚠️  parse-reminder OPTIONS beklenmeyen status: $response"
+            cat /tmp/parse_body
+          else
+            echo "✅ parse-reminder aktif"
+          fi
+
+          echo ""
+          echo "Pinging delete-account Edge Function (OPTIONS preflight)..."
+          response2=$(curl -s -o /tmp/delete_body -w "%{http_code}" \
+            "${SUPABASE_URL}/functions/v1/delete-account" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -X OPTIONS \
+            --max-time 30)
+          echo "delete-account OPTIONS: HTTP $response2"
+          if [ "$response2" != "200" ] && [ "$response2" != "204" ]; then
+            echo "⚠️  delete-account OPTIONS beklenmeyen status: $response2"
+            cat /tmp/delete_body
+          else
+            echo "✅ delete-account aktif"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Supabase Keep-Alive Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Project**: dtepkruumsxlflyzfeut" >> $GITHUB_STEP_SUMMARY
+          echo "- **Next run**: ~3 gün sonra (Salı/Cuma 12:00 UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ping atarak Supabase Free tier inaktivite timer'ını sıfırladık." >> $GITHUB_STEP_SUMMARY
