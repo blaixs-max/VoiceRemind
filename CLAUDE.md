@@ -3,41 +3,83 @@
 > **Marka**: Voicely AI (kullaniciya gorunen isim) • **Repo/slug**: VoiceRemind (git + EAS icin degismedi) • **Bundle**: com.blaixs.VoiceRemind
 > **Yayın stratejisi**: Türkiye-first (Faz 1) → Dünya açılımı (Faz 2, sonraki versiyonla)
 
-## 🎯 Şu Anki Durum (Session Handoff — 2026-05-04 akşam, **iOS v1.0.1 LIVE on App Store + Android v1.0 SUBMITTED to Play Console Internal Testing**)
+## 🎯 Şu Anki Durum (Session Handoff — 2026-06-01 akşam, **iOS v1.0.1 LIVE on App Store + Android v1.0 SUBMITTED to Play Console Closed Testing — IN GOOGLE REVIEW**)
 
-**Son commit:** `2c1b0da` — `feat(android): add adi-registration plugin for Play Console package verification` (origin/main ile senkron, push yapıldı).
+**Son commit:** `ee49195` — `docs: handoff sync — Android v1.0 submitted to Play Console Internal Testing` (origin/main ile senkron).
+
+> Bu handoff bölümü kullanıcı tarafından 2026-06-01 oturumunda Play Console Closed Testing review submission'a kadarki ilerlemeyi yansıtacak şekilde güncellendi.
 
 ### ✅ iOS App Store v1.0.1 — YAYINDA
 Apple v1.0.1 onayladı, App Store'da canlı. Description uzun versiyon güncellendi, iPad screenshots gerçek versiyonlarla değiştirildi (kullanıcı manuel hallettiği için v1.0.2 sprint'i hafifledi).
 
-### 🤖 Android Play Console v1.0 — INTERNAL TESTING'TE (2026-05-04)
+### 🤖 Android Play Console v1.0 — CLOSED TESTING'E SUBMIT EDİLDİ, GOOGLE REVIEW BAŞLADI (2026-06-01)
 
-**Bugünkü oturumda yapılanlar (özet):**
+**Bu oturumda tamamlanan akış (özet, sırayla):**
+
+#### 1. Build + Doğrulama Aşaması (commit `2c1b0da`)
 1. **EAS CLI global kuruldu** (`npm install -g eas-cli`, v18.10.0)
-2. **Production AAB build** çekildi (commit `30155ef` ile, ~50 dk queue + 4 dk compile) → URL: https://expo.dev/artifacts/eas/tmbyQJoKYVRPT86STzqfVv.aab
-3. **Google Cloud project `eas-submit-voicely`** oluşturuldu (project ID `eas-submit-voicely`, numeric `435290266485`)
-4. **Service account** `eas-submit@eas-submit-voicely.iam.gserviceaccount.com` oluşturuldu, JSON key indirildi → `secrets/google-play-service-account.json`
-5. **Google'ın yeni paket sahipliği doğrulama akışına takılındı** (Android Developer Verification 2025 policy):
-   - Eski APK ile upload denendi → "required token file missing" hatası
-   - Açıklamalı doğrulama akışı için **Expo config plugin yazıldı**: `plugins/withAdiRegistration.js` (commit `2c1b0da`)
+2. **Production AAB build** çekildi (commit `30155ef` ile) → https://expo.dev/artifacts/eas/tmbyQJoKYVRPT86STzqfVv.aab (versionCode 4)
+3. **Google Cloud project `eas-submit-voicely`** oluşturuldu (numeric ID `435290266485`)
+4. **Service account** `eas-submit@eas-submit-voicely.iam.gserviceaccount.com` + JSON key → `secrets/google-play-service-account.json`
+5. **Google'ın yeni Android Developer Verification (2025 policy)** akışı için Expo config plugin yazıldı: `plugins/withAdiRegistration.js`
    - Token `DIOKKK6FM5PKGAAAAAAAAAAAAA` `assets/adi-registration.properties`'e gömüldü
-   - Yeni APK build edildi → Play Console'a upload → **paket sahipliği "Kayıtlı"** statüsüne geçti
-6. **Voicely AI app'i Play Console'da yeniden oluşturuldu** (yeni internal app ID `4972471939058285799` — eski 04-26'da yapılan kayıt yeni policy nedeniyle silinmişti)
-7. **Service account "Kullanıcılar ve izinler" üzerinden invite edildi** (yeni redesign: ayrı "API access" sayfası kaldırılmış, Users tab'a entegre)
-   - App permissions: Voicely AI için Yönetici (tüm 13 izin)
-   - Account permissions: boş (least-privilege)
-8. **Google Play Android Developer API** Cloud Console'da etkinleştirildi (`androidpublisher.googleapis.com`, ilk submit denemesinde PERMISSION_DENIED uyarısı geldi)
-9. **`eas submit --platform android --latest`** başarılı → AAB Internal Testing track'a yüklendi (DRAFT release)
+   - Verification APK build edildi → Play Console'a upload → **paket sahipliği "Kayıtlı"** ✅
+6. **Voicely AI app'i Play Console'da yeniden oluşturuldu** (yeni internal app ID `4972471939058285799` — eski kayıt yeni policy ile silinmişti)
+7. **Service account "Kullanıcılar ve izinler" üzerinden invite edildi** (yeni redesign: "API access" sayfası kaldırılmış, Users tab'a entegre)
+8. **Google Play Android Developer API** Cloud Console'da etkinleştirildi (PERMISSION_DENIED hatası sonrası)
+9. **`eas submit --platform android --latest`** ✅ → AAB Internal Testing track'a yüklendi
 
-**Submission detayları:**
-- Build ID: `dd782181-3995-49f2-b906-0c1102708bc7`
-- App version: 1.0.0, versionCode: **4** (server-side autoIncrement 3→4)
-- Track: internal, releaseStatus: DRAFT
-- Submission URL: https://expo.dev/accounts/blaixs/projects/VoiceRemind/submissions/425836bd-ef50-4497-a211-9dbaa7754f26
+#### 2. Play Console Form Doldurma Aşaması (2026-06-01 oturumu)
+**Uygulama içeriği (11 madde, hepsi ✅):**
+- Gizlilik politikası URL: `https://blaixs-max.github.io/VoiceRemind/privacy/`
+- App access: Login required + reviewer creds (`blaixs+reviewer@gmail.com` / `Reviewer2026!`) + bilingual instructions (kısa <500 char versiyon)
+- Reklamlar: Hayır
+- İçerik derecelendirmesi (IARC): Tüm sorulara Hayır → Everyone/3+ rating
+- Hedef kitle: 13-15, 16-17, 18+; çocuklara hitap etmez
+- Haber/COVID/Government/Financial/Health: hepsi Hayır
+- Veri güvenliği formu (5 adım):
+  - Toplama: Evet (Email + Voice + User-generated content)
+  - Email: Toplandı, Paylaşılmadı, Uzun süreli, Kullanıcı seçer (misafir mod), Amaç: App functionality + Account management
+  - Voice: Toplandı + **Paylaşıldı** (OpenAI Whisper API), Kısa süreli (ephemeral), Kullanıcı seçer, Amaç: App functionality
+  - User-generated content (reminders+contacts): Toplandı, Paylaşılmadı, Uzun süreli, Kullanıcı seçer, Amaç: App functionality
+  - Hesap silme URL: support sayfası
+  - Reklam Kimliği (AAID): Toplanmıyor
 
-### 📦 Yeni Eklenen Dosyalar (commit `2c1b0da`)
-- `plugins/withAdiRegistration.js` — Google package verification için config plugin (Expo `withDangerousMod`)
-- `app.json` — plugin referansı eklendi (`./plugins/withAdiRegistration` + token argument)
+**Mağaza listesi (Ana mağaza girişi):**
+- App name: `Voicely AI — Sesli Hatırlatıcı` (30/30)
+- Kısa açıklama: 79 char
+- Tam açıklama: ~2200 char emoji'li (`docs/store-listing.md` v1.0.1 PLANNED VERSION)
+- **App icon**: 512×512 PowerShell ile resize'lı (`assets/brand/icon-512.png` — PowerShell System.Drawing ile 1024'ten downscale, 217 KB)
+- Feature graphic: `assets/brand/feature-graphic.png` (1024×500)
+- Phone screenshots: `iphone-screenshots/` klasöründen 8 JPEG
+- Email: blaixs@gmail.com, Website: blaixs-max.github.io/VoiceRemind/
+
+**Mağaza ayarları:** Kategori = Verimlilik (Productivity)
+
+#### 3. Test Track Setup
+- **Dahili test (Internal Testing) yayında**: Sürüm 4 (1.0.0), versionCode 4, status: "Etkin" + "Dahili test kullanıcıları tarafından kullanılabilir"
+- **Kapalı test - Alpha kanalı** konfigüre edildi:
+  - Sürüm: 4 (1.0.0) — Sürümü yükselt ile Internal'dan promote
+  - Ülke/bölge: **Türkiye** ✅
+  - Test kullanıcıları: `voicely-ai-closed-testers` email listesi atandı (şu an 1 kullanıcı: blaixs@gmail.com, 20'ye çıkartılacak)
+
+#### 4. ✅ FINAL SUBMIT: 12 değişiklik Google review'a gönderildi (2026-06-01)
+Yayın özeti sayfasından "12 değişikliği yayınla" butonuna basıldı. Liste:
+- Kapalı test - Alpha: sürüm 4, Türkiye, voicely-ai-closed-testers
+- Mağaza girişleri: Türkçe (tr-TR) dil eklendi
+- Uygulama içeriği: IARC, Hedef kitle, Gizlilik URL, Ads, Data Safety
+- Mağaza ayarları: Verimlilik kategorisi
+- **Yönetilen yayınlama AKTIF** (Google approve'dan sonra manuel "yayına çık" gerekecek — basit ayarla)
+
+### 📦 Yeni Eklenen Dosyalar (commit `2c1b0da` + sonrası)
+- `plugins/withAdiRegistration.js` — Google package verification için config plugin
+- `app.json` — plugin referansı eklendi
+- `assets/brand/icon-512.png` — Play Console 512×512 icon (PowerShell resize)
+
+### ⏳ Şu an bekleniyor
+- **Google Closed Testing review** — 1-3 gün (ilk submission'da 7 gün olabilir)
+- Onay mail'i: `noreply@google.com` → `blaixs@gmail.com`
+- Onay sonrası test linki aktif olur, testerlara gönderilir, 14 gün sayacı başlar
 
 ### 📦 v1.0.1 Code Changes (commit `2376d74`)
 
@@ -122,30 +164,26 @@ Apple review kuyruğunda. Beklenen: 24-72h içinde "In Review" → onay/red.
 - **Sorun:** Misafir modda AsyncStorage'da oluşturulan hatırlatıcılar, kullanıcı sonra hesap açtığında Supabase'e migrate edilmiyor (UX sorunu, Apple sormaz).
 - **v1.1 fix:** authStore'da `signIn`/`signUp` success'inde `reminderStore.migrateLocalToCloud()` çağrısı — AsyncStorage'daki tüm reminder'ları Supabase'e POST + AsyncStorage'ı temizle.
 
-### 🤖 Android — Internal Testing Track'a Yüklendi → Sıradaki Adımlar
+### 🤖 Android — Closed Testing Review'da → Sıradaki Adımlar
 
-**ŞU ANKİ STATÜ:** AAB DRAFT olarak Internal Testing'te. Play Console formları henüz dolmadı, Closed Testing'e promote etmek için form'lar şart.
+**ŞU ANKİ STATÜ (2026-06-01):** Kapalı test - Alpha kanalında **12 değişiklik Google review'a gönderildi**, onay bekleniyor.
 
-**Sırasıyla yapılacaklar:**
-1. **Play Console formlarını doldur** (build gerekmez, ~1 saat):
-   - Store listing — kaynak: `docs/store-listing.md`
-   - Data Safety — kaynak: `docs/data-safety.md`
-   - Content Rating (IARC) — questionnaire, hepsi No → 4+
-   - Target Audience — 13-15, 16-17, 18+
-   - App Content checklist — Privacy/Ads/Health/Government/Financial vs.
-   - App access — login required + reviewer creds (`blaixs+reviewer@gmail.com` / `Reviewer2026!`)
-2. **Internal Testing release'i "Review" durumuna geçir** (DRAFT'tan çıkar — opsiyonel kontrol amaçlı)
-3. **Closed Testing track oluştur ve release'i promote et**
-4. **20 tester topla + email list'e ekle** (aile/arkadaş/Discord/Twitter/r/Turkey)
-5. **14 gün kesintisiz test** (her tester en az 1 kez app'i açmalı)
-6. **Production'a promote** → Turkey only → Review 1-3 gün
-7. **Production yayın** → Play Store'da arama: "Voicely AI"
+**Sıradaki adımlar (kullanıcı):**
+1. ⏳ **Google review onayını bekle** (1-3 gün, mail kutusunu kontrol et)
+2. 🎯 **20 tester topla** (paralel iş — review tamamlanmadan önce hazır olmalı)
+   - Liste: `voicely-ai-closed-testers` (Dahili test → E-posta listeleri → düzenle)
+   - Şu an 1 kişi (blaixs@gmail.com), 19 kişi daha gerekli
+   - Kanallar: aile/arkadaş → WhatsApp → Twitter post → Discord/Slack → Reddit
+3. 📧 **Onay sonrası** test linkini testerlara gönder
+4. ⏲ **14 gün kesintisiz test** (her tester en az 1 kez app'i açmalı, sayaç release date'ten)
+5. 🚀 **14 gün sonunda Production'a promote** → Üretim track → Turkey only → Submit → Review 1-3 gün
+6. 🎉 **Production yayın** → Play Store'da `play.google.com/store/apps/details?id=com.blaixs.VoiceRemind`
 
-### 🗓 Tahmini Yayın Tarihleri (Updated 2026-05-04)
+### 🗓 Tahmini Yayın Tarihleri (Updated 2026-06-01)
 - **iOS App Store v1.0.1:** ✅ YAYINDA
-- **Google Play v1.0:** Internal Testing'te (2026-05-04) → formlar (1-3 gün) → Closed Testing 14 gün → Review 1-3 gün → **Tahmini production: ~2026-05-22 ± 3 gün**
-- **v1.0.2 sprint (Sentry):** Android production yayınlandıktan sonra ele alınır, ~2026-05-25-06-01
-- **v1.1 sprint (reminder migration + monetization):** Haziran ortası
+- **Google Play v1.0:** Closed Testing review'da (2026-06-01) → onay 1-3 gün → 14 gün kapalı test → production review 1-3 gün → **Tahmini production: ~2026-06-18 ± 3 gün**
+- **v1.0.2 sprint (Sentry):** Android production yayınlandıktan sonra
+- **v1.1 sprint (reminder migration + monetization):** Yaz ortası
 
 ### 🔑 Önemli State Bilgileri
 - **EAS Android upload-key SHA-256:** `8E:87:57:A1:01:92:BC:87:52:1D:C4:AC:0D:10:2C:07:96:77:FD:58:3E:A0:F3:C7:D5:2F:C5:BF:10:B5:79:12` (Play Console'a kayıtlı, "Kayıtlı" statüsünde)

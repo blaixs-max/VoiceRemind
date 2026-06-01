@@ -12,24 +12,35 @@ Bu doküman Play Console hesabı onaylandığı andan **Closed Testing track'ın
 
 ---
 
-## 📍 Mevcut Durum (2026-05-04 — Internal Testing'e AAB yüklendi)
+## 📍 Mevcut Durum (2026-06-01 — Closed Testing Review'da, Google approval bekleniyor)
 
 - ✅ Play Console hesabı onaylandı (2026-04-23)
 - ✅ Privacy Policy URL canlı: https://blaixs-max.github.io/VoiceRemind/privacy/
 - ✅ **Faz 1.5 (paket sahipliği doğrulaması)** TAMAMLANDI — Google'ın yeni token-based flow'u ile (`plugins/withAdiRegistration.js`, token `DIOKKK6FM5PKGAAAAAAAAAAAAA` APK'ya gömüldü), `com.blaixs.VoiceRemind` "Kayıtlı" statüsünde
-- ✅ **Faz 1 (app create)** TAMAMLANDI — Voicely AI app yeniden oluşturuldu (eski app yeni policy ile silinmişti), yeni internal ID `4972471939058285799`
+- ✅ **Faz 1 (app create)** TAMAMLANDI — Voicely AI app yeniden oluşturuldu, yeni internal ID `4972471939058285799`
 - ✅ **Faz 2 (Service Account JSON)** TAMAMLANDI — `secrets/google-play-service-account.json` mevcut, Google Cloud project `eas-submit-voicely` (numeric `435290266485`), Google Play Android Developer API enabled
-- ✅ **Service account Play Console'da invite edildi** — Yeni redesign'da "Setup → API access" KALDIRILDI, artık "Kullanıcılar ve izinler → Yeni kullanıcılar davet et"'ten ekleniyor. App permissions: Voicely AI için Yönetici (13 izin). Account permissions boş bırakıldı (least-privilege).
+- ✅ **Service account invite** — "Kullanıcılar ve izinler → Yeni kullanıcılar davet et" (yeni redesign'da "API access" sayfası kaldırılmış). App permissions: Voicely AI için Yönetici (13 izin). Account permissions boş (least-privilege).
 - ✅ **Faz 3 (Production AAB build)** TAMAMLANDI — versionCode 4, https://expo.dev/artifacts/eas/tmbyQJoKYVRPT86STzqfVv.aab
-- ✅ **Faz 4 (eas submit Internal Testing'e)** TAMAMLANDI — DRAFT release görünmeli, Submission URL: https://expo.dev/accounts/blaixs/projects/VoiceRemind/submissions/425836bd-ef50-4497-a211-9dbaa7754f26
-- ⏸ **Faz 5-9 (Formlar)** YAPILMADI — Store listing, Data Safety, Content Rating, Target Audience, App Content checklist
-- ⏸ **Faz 10 (Closed Testing 14 gün)** BAŞLAMADI
-- ⏸ **Faz 11 (Production Turkey-only)** BAŞLAMADI
+- ✅ **Faz 4 (eas submit Internal Testing'e)** TAMAMLANDI — DRAFT release
+- ✅ **Faz 5 (Store Listing)** TAMAMLANDI — Ana mağaza girişi tamamen dolduruldu:
+  - App name, kısa açıklama (79 char), tam açıklama (~2200 char emoji'li), 512×512 icon (`assets/brand/icon-512.png`), 1024×500 feature graphic, 8 phone screenshots, kategori (Verimlilik)
+- ✅ **Faz 6 (Data Safety)** TAMAMLANDI — 3 veri tipi (Email, Voice, User-generated), 3rd party share: OpenAI (audio için), in-app deletion
+- ✅ **Faz 7 (Content Rating IARC)** TAMAMLANDI — Tüm sorulara Hayır → Everyone/3+ rating
+- ✅ **Faz 8 (Target Audience)** TAMAMLANDI — 13-15, 16-17, 18+; çocuklara hitap etmez
+- ✅ **Faz 9 (App Content checklist)** TAMAMLANDI — 11 madde hepsi yeşil ✅ (Privacy, App access, Ads=No, Content rating, Target audience, News=No, COVID=No, Government=No, Financial=No, Health=No, Data safety)
+- ✅ **Dahili Test yayında** — Sürüm 4 (1.0.0) "Etkin"
+- ✅ **Kapalı Test - Alpha kanalı konfigüre edildi** — Sürüm 4, Türkiye, voicely-ai-closed-testers email listesi
+- ✅ **FINAL SUBMIT (2026-06-01):** 12 değişiklik Google review'a gönderildi (Yönetilen yayınlama aktif)
+- ⏳ **Google review** — 1-3 gün (ilk submission'da 7 gün olabilir)
+- ⏸ **Faz 10 (Closed Testing 14 gün)** — review onayından sonra başlar
+- ⏸ **Faz 11 (Production Turkey-only)** — 14 gün sonra
 
 ### Sıradaki adımlar (kullanıcı manuel)
-1. Faz 5-9: Play Console formları (~1 saat, paralel doldurulabilir)
-2. Faz 10: Closed Testing track + 20 tester + 14 gün
-3. Faz 11: Production release Turkey-only, review 1-3 gün
+1. ⏳ Google review onayını bekle (mail kontrol)
+2. 🎯 20 tester topla (review beklerken paralel)
+3. 📧 Onay sonrası test linkini testerlara gönder → 14 gün sayacı başlar
+4. 🚀 14 gün sonunda production'a promote → Türkiye only → review 1-3 gün
+5. 🎉 Production yayın
 
 ### Sentry entegrasyonu (v1.0.2 sprint'i — Android production yayınlandıktan sonra)
 - Hem Android hem iOS için ortak v1.0.2 build
