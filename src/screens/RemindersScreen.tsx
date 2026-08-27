@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  RefreshControl,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -46,13 +47,26 @@ export default function RemindersScreen() {
   const markPending = useReminderStore((s) => s.markPending)
   const deleteReminder = useReminderStore((s) => s.deleteReminder)
   const toggleImportant = useReminderStore((s) => s.toggleImportant)
+  const fetchReminders = useReminderStore((s) => s.fetchReminders)
+  const fetchError = useReminderStore((s) => s.fetchError)
+  const loading = useReminderStore((s) => s.loading)
   const getContact = useContactStore((s) => s.getContact)
   const contacts = useContactStore((s) => s.contacts)
+  const fetchContacts = useContactStore((s) => s.fetchContacts)
 
   const [filter, setFilter] = useState<FilterMode>('pending')
   const [contactFilter, setContactFilter] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [manualFormVisible, setManualFormVisible] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  // Pull-to-refresh + hata banner'ının "Tekrar dene" tap'i için ortak handler.
+  // Hem reminder hem cariler paralel yenilenir (cariler filtre chip'lerini besliyor).
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await Promise.all([fetchReminders(), fetchContacts()])
+    setRefreshing(false)
+  }, [fetchReminders, fetchContacts])
 
   // Ekran saat başına kadar açık kalırsa grupları doğru tutmak için
   // 60 sn'de bir 'now' tick'i — useMemo bu tick'e bağlı olduğundan gece yarısı
@@ -348,22 +362,58 @@ export default function RemindersScreen() {
         )}
       </View>
 
+      {/* Fetch hata banner'ı — sessiz fail'in görünür karşılığı.
+          fetchReminders başarısız olunca kullanıcı boş liste görüp panik yapmasın diye,
+          eski state korunuyor + üstte turuncu bant ile durum bildiriliyor. */}
+      {fetchError && (
+        <TouchableOpacity
+          style={styles.errorBanner}
+          onPress={onRefresh}
+          activeOpacity={0.85}
+          disabled={loading || refreshing}
+        >
+          <Ionicons name="cloud-offline-outline" size={16} color={colors.warning} />
+          <Text style={styles.errorBannerText} numberOfLines={2}>{fetchError}</Text>
+          <View style={styles.errorBannerAction}>
+            <Ionicons name="refresh" size={14} color={colors.warning} />
+            <Text style={styles.errorBannerActionText}>Tekrar dene</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       {/* Liste */}
       {totalCount === 0 ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="notifications-off-outline" size={32} color={colors.textMuted} />
-          </View>
-          <Text style={styles.emptyText}>
-            {searchQuery.trim() ? `"${searchQuery.trim()}" için sonuç yok`
-            : filter === 'pending' ? 'Bekleyen hatırlatıcı yok'
-            : filter === 'done' ? 'Tamamlanmış hatırlatıcı yok'
-            : filter === 'today' ? 'Bugün için hatırlatıcı yok'
-            : filter === 'important' ? 'Önemli işaretli hatırlatıcı yok'
-            : 'Henüz hatırlatıcı eklenmemiş'}
-          </Text>
-          <Text style={styles.emptyHint}>+ butonuyla manuel ekle ya da mikrofona basılı tut</Text>
-        </View>
+        <SectionList
+          sections={[]}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primaryLight}
+              colors={[colors.primary]}
+            />
+          }
+          contentContainerStyle={styles.emptyScrollContent}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="notifications-off-outline" size={32} color={colors.textMuted} />
+              </View>
+              <Text style={styles.emptyText}>
+                {searchQuery.trim() ? `"${searchQuery.trim()}" için sonuç yok`
+                : filter === 'pending' ? 'Bekleyen hatırlatıcı yok'
+                : filter === 'done' ? 'Tamamlanmış hatırlatıcı yok'
+                : filter === 'today' ? 'Bugün için hatırlatıcı yok'
+                : filter === 'important' ? 'Önemli işaretli hatırlatıcı yok'
+                : 'Henüz hatırlatıcı eklenmemiş'}
+              </Text>
+              <Text style={styles.emptyHint}>+ butonuyla manuel ekle ya da mikrofona basılı tut</Text>
+              <Text style={styles.emptyHintSecondary}>Aşağı çekip yenileyebilirsin</Text>
+            </View>
+          }
+        />
       ) : (
         <SectionList
           sections={sections}
@@ -383,6 +433,14 @@ export default function RemindersScreen() {
           stickySectionHeadersEnabled
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primaryLight}
+              colors={[colors.primary]}
+            />
+          }
         />
       )}
 
@@ -615,12 +673,55 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     maxWidth: 100,
   },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(245, 158, 11, 0.35)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.warning,
+    fontWeight: fontWeight.medium,
+  },
+  errorBannerAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.45)',
+  },
+  errorBannerActionText: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.warning,
+  },
+  emptyScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  emptyHintSecondary: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginTop: spacing.md,
+    fontStyle: 'italic',
+  },
   empty: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
   },
   emptyIcon: {
     width: 80,
