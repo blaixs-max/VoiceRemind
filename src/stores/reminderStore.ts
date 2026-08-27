@@ -17,6 +17,8 @@ const LOCAL_STORAGE_KEY = 'voicely.localReminders'
 type ReminderState = {
   reminders: Reminder[]
   loading: boolean
+  fetchError: string | null
+  clearFetchError: () => void
   fetchReminders: () => Promise<void>
   addReminder: (data: Omit<Reminder, 'id' | 'notificationId' | 'createdAt'>) => Promise<void>
   updateReminder: (id: string, data: Partial<Reminder>) => Promise<void>
@@ -105,47 +107,77 @@ function localId(): string {
 export const useReminderStore = create<ReminderState>()((set, get) => ({
   reminders: [],
   loading: false,
+  fetchError: null,
 
+  clearFetchError: () => set({ fetchError: null }),
+
+  // Resilient fetch:
+  //  - Ağ/session hatasında 1 kez session refresh + retry.
+  //  - Hâlâ fail ise mevcut `reminders` state'ini SIFIRLAMAZ (kullanıcı boş liste
+  //    görüp veri kayboldu sanmasın) — sadece `fetchError` set eder.
+  //  - Başarıda `fetchError`'u temizler.
   fetchReminders: async () => {
+    if (isGuestMode()) {
+      set({ loading: true })
+      const local = await loadLocal()
+      set({ reminders: local, loading: false, fetchError: null })
+      return
+    }
+
     set({ loading: true })
-    try {
-      if (isGuestMode()) {
-        const local = await loadLocal()
-        set({ reminders: local })
-        return
-      }
 
-      const { data, error } = await supabase
-        .from('reminders')
-        .select('*')
-        .order('datetime', { ascending: true })
+    let lastError: unknown = null
+    let succeeded = false
+    let reminders: Reminder[] = []
 
-      if (error) throw error
-      const reminders = (data ?? []).map(rowToReminder)
-      set({ reminders })
+    for (let attempt = 0; attempt < 2 && !succeeded; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('reminders')
+          .select('*')
+          .order('datetime', { ascending: true })
 
-      // Pending hatırlatıcılar için lokal notification schedule et
-      for (const r of reminders) {
-        if (r.status === 'pending' && !r.notificationId) {
-          const notifId = await scheduleNotification(r.title, r.datetime, r.remindBefore)
-          if (notifId) {
-            await supabase
-              .from('reminders')
-              .update({ notification_id: notifId })
-              .eq('id', r.id)
-
-            set((s) => ({
-              reminders: s.reminders.map((rem) =>
-                rem.id === r.id ? { ...rem, notificationId: notifId } : rem
-              ),
-            }))
-          }
+        if (error) throw error
+        reminders = (data ?? []).map(rowToReminder)
+        succeeded = true
+      } catch (err) {
+        lastError = err
+        if (attempt === 0) {
+          // İlk deneme fail — session'ı yenilemeyi dene, sonra retry.
+          await supabase.auth.refreshSession().catch(() => {})
         }
       }
-    } catch (err) {
-      console.error('fetchReminders error:', err)
-    } finally {
-      set({ loading: false })
+    }
+
+    if (!succeeded) {
+      console.error('fetchReminders error (after retry):', lastError)
+      // KRITIK: mevcut state'i koru, kullanıcı boş liste görmesin
+      set({
+        loading: false,
+        fetchError: 'Hatırlatıcılar yüklenemedi. Aşağı çekip tekrar deneyin.',
+      })
+      return
+    }
+
+    set({ reminders, loading: false, fetchError: null })
+
+    // Pending hatırlatıcılar için lokal notification schedule et
+    for (const r of reminders) {
+      if (r.status === 'pending' && !r.notificationId) {
+        const notifId = await scheduleNotification(r.title, r.datetime, r.remindBefore)
+        if (notifId) {
+          await supabase
+            .from('reminders')
+            .update({ notification_id: notifId })
+            .eq('id', r.id)
+
+          set((s) => ({
+            reminders: s.reminders.map((rem) =>
+              rem.id === r.id ? { ...rem, notificationId: notifId } : rem
+            ),
+          }))
+        }
+      }
     }
   },
 

@@ -10,6 +10,8 @@ import type { Contact, ContactSummary } from '../models/types'
 type ContactState = {
   contacts: Contact[]
   loading: boolean
+  fetchError: string | null
+  clearFetchError: () => void
   fetchContacts: () => Promise<void>
   addContact: (data: Omit<Contact, 'id' | 'createdAt'>) => Promise<string>
   updateContact: (id: string, data: Partial<Contact>) => Promise<void>
@@ -35,27 +37,53 @@ function rowToContact(row: any): Contact {
 export const useContactStore = create<ContactState>()((set, get) => ({
   contacts: [],
   loading: false,
+  fetchError: null,
 
+  clearFetchError: () => set({ fetchError: null }),
+
+  // Resilient fetch — reminderStore.fetchReminders ile aynı desen:
+  // fail'de mevcut state korunur (kullanıcı silinmiş sanmasın), fetchError set edilir.
   fetchContacts: async () => {
     // Misafir mod: cari Supabase-bound özellik. Local CRUD yok, fetch no-op.
     if (useAuthStore.getState().isGuest) {
-      set({ contacts: [], loading: false })
+      set({ contacts: [], loading: false, fetchError: null })
       return
     }
-    set({ loading: true })
-    try {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .order('created_at', { ascending: false })
 
-      if (error) throw error
-      set({ contacts: (data ?? []).map(rowToContact) })
-    } catch (err) {
-      console.error('fetchContacts error:', err)
-    } finally {
-      set({ loading: false })
+    set({ loading: true })
+
+    let lastError: unknown = null
+    let succeeded = false
+    let contacts: Contact[] = []
+
+    for (let attempt = 0; attempt < 2 && !succeeded; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('contacts')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        contacts = (data ?? []).map(rowToContact)
+        succeeded = true
+      } catch (err) {
+        lastError = err
+        if (attempt === 0) {
+          await supabase.auth.refreshSession().catch(() => {})
+        }
+      }
     }
+
+    if (!succeeded) {
+      console.error('fetchContacts error (after retry):', lastError)
+      set({
+        loading: false,
+        fetchError: 'Cariler yüklenemedi. Aşağı çekip tekrar deneyin.',
+      })
+      return
+    }
+
+    set({ contacts, loading: false, fetchError: null })
   },
 
   addContact: async (data) => {
