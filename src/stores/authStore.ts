@@ -41,13 +41,31 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         AsyncStorage.getItem(GUEST_STORAGE_KEY),
       ])
 
+      // Cache'lenmiş session'ı server-side doğrula: getUser() JWT'yi Supabase Auth
+      // sunucusunda validate eder. Cache "geçerli" görünüyor ama server reddediyorsa
+      // (expire olmuş refresh token vb.), refresh dene → başarısızsa session'ı sıfırla.
+      // Bu, "app'e girdim ama boş veri geldi çünkü token invalid" bug'ını önler.
+      let validSession = data.session
+      if (validSession) {
+        const { data: userData, error } = await supabase.auth.getUser()
+        if (error || !userData.user) {
+          const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError || !refreshed.session) {
+            // Kurtarılamaz — user login ekranına düşsün, "sessizce boş liste" olmasın.
+            validSession = null
+          } else {
+            validSession = refreshed.session
+          }
+        }
+      }
+
       // Session varsa guest bayrağını yok say (login öncelikli).
-      const hasSession = !!data.session
+      const hasSession = !!validSession
       const isGuest = !hasSession && guestRaw === '1'
 
       set({
-        session: data.session,
-        user: data.session?.user ?? null,
+        session: validSession,
+        user: validSession?.user ?? null,
         isGuest,
         initialized: true,
       })
