@@ -55,6 +55,12 @@ jobs:
       - name: Verify EAS auth
         run: eas whoami
 
+      - name: Install dependencies
+        # eas submit still parses app.json (which references expo-av + other
+        # config plugins), so node_modules must exist even for --latest.
+        # Doesn't consume EAS Build quota — only for local plugin resolution.
+        run: npm ci
+
       - name: Submit latest iOS build
         # --latest: use the newest finished iOS build on the given profile
         # --non-interactive: no prompts, credentials from eas.json + EAS-stored ASC API key
