@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.blaixs.VoiceRemind",
+      "buildNumber": "6",
       "config": {
         "usesNonExemptEncryption": false
       },
