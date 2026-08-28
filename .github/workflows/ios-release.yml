@@ -52,6 +52,11 @@ jobs:
     permissions:
       contents: read
 
+    # EAS CLI EXPO_TOKEN'ı env'den okuyor — non-interactive auth için yeterli,
+    # `eas login` çalıştırmaya gerek yok.
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -59,14 +64,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '22'
 
-      - name: Setup EAS CLI
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        # expo/expo-github-action@v8 kullanmıyoruz — v8 yarn'ı çağırıyor
+        # ama runner'da yarn yok → exit 1. Direkt npm install cleaner.
+        run: npm install -g eas-cli
 
       - name: Verify EAS auth
         run: eas whoami
