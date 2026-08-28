@@ -32,7 +32,9 @@
   "submit": {
     "production": {
       "ios": {
-        "language": "tr-TR"
+        "language": "tr-TR",
+        "ascAppId": "6764582214",
+        "appleTeamId": "XRUJLSF5J9"
       },
       "android": {
         "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
