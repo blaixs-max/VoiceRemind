@@ -1,0 +1,73 @@
+name: iOS Submit Latest Build
+
+# Submit the LATEST successful iOS build from EAS to App Store Connect.
+# No build — just uploads whatever is already sitting in EAS Build cloud.
+# Runs in ~2 minutes, does NOT consume EAS Build quota.
+#
+# Use this when:
+#   - A previous ios-release.yml run built the binary but auto-submit failed
+#     (e.g. missing eas.json ascAppId, ASC API expiry, transient error)
+#   - You want to re-submit a build to App Store Connect without rebuilding
+#
+# Prerequisites — same as ios-release.yml (EXPO_TOKEN secret + ASC API on EAS)
+# Also requires eas.json → submit.production.ios.ascAppId to be set.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS submit profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+concurrency:
+  group: ios-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    name: EAS Submit iOS (latest build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Verify EAS auth
+        run: eas whoami
+
+      - name: Submit latest iOS build
+        # --latest: use the newest finished iOS build on the given profile
+        # --non-interactive: no prompts, credentials from eas.json + EAS-stored ASC API key
+        run: eas submit --platform ios --profile ${{ inputs.profile }} --latest --non-interactive
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## iOS Submit Result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Profile**: ${{ inputs.profile }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next steps (if success)" >> $GITHUB_STEP_SUMMARY
+          echo "1. Wait ~30 min → App Store Connect → TestFlight processing" >> $GITHUB_STEP_SUMMARY
+          echo "2. App Store Connect → App Store tab → Add build → Submit for Review" >> $GITHUB_STEP_SUMMARY
